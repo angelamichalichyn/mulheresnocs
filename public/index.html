@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mulheres no CS — Cadastro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rose: #C8506A;
+  --rose-light: #F5E6EA;
+  --rose-dark: #8B2D42;
+  --cream: #FBF7F4;
+  --warm: #F0E8E2;
+  --text: #1C1410;
+  --muted: #7A6860;
+  --hint: #B0A09A;
+  --border: #E2D5CF;
+  --surface: #FFFFFF;
+  --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* HERO */
+.hero {
+  background: var(--rose-dark);
+  padding: 3.5rem 1.5rem 2.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, #D4607A44, transparent 60%),
+              radial-gradient(ellipse at 80% 20%, #F0A0B033, transparent 55%);
+}
+.hero-inner { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; }
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  color: #fff;
+  line-height: 1.15;
+  margin-bottom: .75rem;
+}
+.hero h1 em { font-style: italic; color: #F7C5CF; }
+.hero p {
+  color: #F0D8DC;
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  font-size: 12px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  margin-bottom: 1.25rem;
+  letter-spacing: .04em;
+}
+
+/* FORM CONTAINER */
+.form-wrap {
+  max-width: 560px;
+  margin: -1rem auto 3rem;
+  padding: 0 1rem;
+}
+.form-card {
+  background: var(--surface);
+  border-radius: 20px;
+  padding: 2rem 1.75rem;
+  box-shadow: 0 4px 32px rgba(140,50,60,.08);
+}
+
+/* STEPS */
+.step-bar {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 2rem;
+}
+.step-dot {
+  height: 4px;
+  flex: 1;
+  border-radius: 4px;
+  background: var(--warm);
+  transition: background .3s;
+}
+.step-dot.active { background: var(--rose); }
+.step-dot.done { background: var(--rose-dark); }
+
+/* SECTIONS */
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--rose-dark);
+  margin-bottom: 1.25rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+/* FIELDS */
+.field { margin-bottom: 1.1rem; }
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  margin-bottom: 5px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.opt { font-weight: 400; color: var(--hint); text-transform: none; letter-spacing: 0; margin-left: 4px; }
+.field input, .field select {
+  width: 100%;
+  padding: 11px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--cream);
+  color: var(--text);
+  transition: border-color .2s, box-shadow .2s;
+  -webkit-appearance: none;
+}
+.field input:focus, .field select:focus {
+  outline: none;
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px rgba(200,80,106,.1);
+  background: #fff;
+}
+.field input.error { border-color: #E24B4A; }
+.err {
+  font-size: 12px;
+  color: #C0392B;
+  margin-top: 4px;
+  display: none;
+}
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* CPF VALIDATION BADGE */
+.cpf-status {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 8px;
+}
+.cpf-status.ok { background: #E1F5EE; color: #0F6E56; display: flex; }
+.cpf-status.fail { background: #FCEBEB; color: #A32D2D; display: flex; }
+.cpf-status.checking { background: var(--warm); color: var(--muted); display: flex; }
+
+/* UPLOAD */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  background: var(--cream);
+  transition: border-color .2s, background .2s;
+}
+.upload-zone:hover { border-color: var(--rose); background: var(--rose-light); }
+.upload-zone.has-file { border-color: #1D9E75; border-style: solid; background: #E1F5EE; }
+.upload-icon { font-size: 28px; margin-bottom: 8px; }
+.upload-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.upload-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
+input[type=file] { display: none; }
+.preview-img {
+  display: none;
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+.remove-foto {
+  display: none;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #E24B4A;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* CONSENT */
+.consent-box {
+  background: var(--rose-light);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 1.5rem 0;
+}
+.consent-box label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--rose-dark);
+  cursor: pointer;
+  line-height: 1.6;
+}
+.consent-box input[type=checkbox] {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  accent-color: var(--rose);
+}
+
+/* SUBMIT */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--rose);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: .02em;
+  transition: background .2s, transform .1s;
+  position: relative;
+  overflow: hidden;
+}
+.submit-btn:hover { background: var(--rose-dark); }
+.submit-btn:active { transform: scale(.99); }
+.submit-btn:disabled { background: var(--hint); cursor: not-allowed; }
+
+/* SUCCESS */
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+.success-screen .check-circle {
+  width: 72px;
+  height: 72px;
+  background: #E1F5EE;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto 1.25rem;
+}
+.success-screen h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  color: var(--rose-dark);
+  margin-bottom: .75rem;
+}
+.success-screen p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+/* LOADING SPINNER */
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* INFO BOX */
+.info-box {
+  background: #FBF4E8;
+  border-left: 3px solid #BA7517;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-bottom: 1.25rem;
+  font-size: 12.5px;
+  color: #633806;
+  line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+  .row2 { grid-template-columns: 1fr; }
+  .form-card { padding: 1.5rem 1.25rem; }
+  .hero { padding: 2.5rem 1.25rem 2rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">✦ Comunidade exclusiva</div>
+    <h1>Mulheres<br>no <em>CS</em></h1>
+    <p>Um espaço seguro para mulheres que jogam Counter-Strike.<br>Preencha o formulário para solicitar seu acesso.</p>
+  </div>
+</div>
+
+<div class="form-wrap">
+  <div class="form-card">
+
+    <div class="step-bar">
+      <div class="step-dot active" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <div id="form-body">
+
+      <!-- DADOS PESSOAIS -->
+      <div class="section-title">Seus dados</div>
+
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" id="nome" placeholder="Como aparece no seu documento" autocomplete="off">
+        <div class="err" id="err-nome">Insira seu nome completo (nome e sobrenome).</div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Nick / apelido</label>
+          <input type="text" id="nick" placeholder="Seu @ no jogo" autocomplete="off" oninput="checkNick()">
+          <div class="err" id="err-nick">Mínimo 3 caracteres.</div>
+        </div>
+        <div class="field">
+          <label>Data de nascimento</label>
+          <input type="date" id="dnasc" max="">
+          <div class="err" id="err-dnasc">Você precisa ter 18 anos ou mais.</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>CPF</label>
+        <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)" onblur="validarCPF()">
+        <div class="cpf-status" id="cpf-status"></div>
+        <div class="err" id="err-cpf">CPF inválido.</div>
+      </div>
+
+      <div class="field">
+        <label>Endereço <span class="opt">(opcional)</span></label>
+        <input type="text" id="endereco" placeholder="Cidade, estado">
+      </div>
+
+      <!-- VERIFICAÇÃO DE IDENTIDADE -->
+      <div class="section-title" style="margin-top:1.75rem">Verificação de identidade</div>
+
+      <div class="info-box">
+        Tire uma selfie segurando seu documento com foto (RG, CNH ou passaporte) visível ao lado do rosto. A foto será analisada por uma administradora humana e deletada em seguida.
+      </div>
+
+      <div class="field">
+        <label>Selfie com documento</label>
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('foto-input').click()">
+          <div class="upload-icon">📸</div>
+          <div class="upload-title">Toque para enviar a foto</div>
+          <div class="upload-sub">Seu rosto + documento visível<br>JPG ou PNG — máx. 8 MB</div>
+        </div>
+        <input type="file" id="foto-input" accept="image/jpeg,image/png" onchange="previewFoto(this)">
+        <img class="preview-img" id="preview-img" alt="Prévia">
+        <button class="remove-foto" id="remove-foto" onclick="removerFoto()">✕ Remover foto</button>
+        <div class="err" id="err-foto">A foto com documento é obrigatória.</div>
+      </div>
+
+      <!-- CONSENTIMENTO -->
+      <div class="consent-box">
+        <label>
+          <input type="checkbox" id="consent">
+          Autorizo o uso dos meus dados e imagem exclusivamente para verificação de identidade por uma administradora. Entendo que minha foto será analisada e descartada após a decisão.
+        </label>
+      </div>
+      <div class="err" id="err-consent" style="margin-top:-8px;margin-bottom:12px">Você precisa aceitar para continuar.</div>
+
+      <button class="submit-btn" id="submit-btn" onclick="enviar()">
+        Enviar cadastro
+      </button>
+
+    </div>
+
+    <div class="success-screen" id="success-screen">
+      <div class="check-circle">✓</div>
+      <h2>Cadastro enviado!</h2>
+      <p>Uma administradora vai revisar seus dados em até 48 horas e entrará em contato. Obrigada por fazer parte da comunidade!</p>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// DATA MÁXIMA (18 anos)
+const hoje = new Date();
+const max18 = new Date(hoje.getFullYear()-18, hoje.getMonth(), hoje.getDate()).toISOString().split('T')[0];
+document.getElementById('dnasc').max = max18;
+
+// MÁSCARA CPF
+function maskCPF(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
+  else if (v.length > 6) v = v.replace(/(\d{3})(\d{3})(\d{1,3})/,'$1.$2.$3');
+  else if (v.length > 3) v = v.replace(/(\d{3})(\d{1,3})/,'$1.$2');
+  el.value = v;
+  document.getElementById('cpf-status').className = 'cpf-status';
+}
+
+// VALIDAÇÃO MATEMÁTICA CPF
+function cpfValido(cpf) {
+  cpf = cpf.replace(/\D/g,'');
+  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+  let s=0; for(let i=0;i<9;i++) s+=+cpf[i]*(10-i);
+  let d1=(s*10)%11; if(d1>=10) d1=0; if(d1!==+cpf[9]) return false;
+  s=0; for(let i=0;i<10;i++) s+=+cpf[i]*(11-i);
+  let d2=(s*10)%11; if(d2>=10) d2=0; return d2===+cpf[10];
+}
+
+function validarCPF() {
+  const val = document.getElementById('cpf').value;
+  const st = document.getElementById('cpf-status');
+  if (!val) return;
+  if (!cpfValido(val)) {
+    st.className='cpf-status fail'; st.textContent='✗ CPF com formato inválido';
+  } else {
+    st.className='cpf-status ok'; st.textContent='✓ CPF válido';
+  }
+}
+
+function checkNick() {
+  const v = document.getElementById('nick').value.trim();
+  if (v.length >= 3) hideErr('err-nick');
+}
+
+// UPLOAD FOTO
+function previewFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 8*1024*1024) {
+    showErr('err-foto','Arquivo muito grande. Máximo 8 MB.');
+    input.value=''; return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('preview-img').style.display = 'block';
+    document.getElementById('remove-foto').style.display = 'block';
+    document.getElementById('upload-zone').classList.add('has-file');
+    document.getElementById('upload-zone').querySelector('.upload-title').textContent = '✓ Foto adicionada';
+    hideErr('err-foto');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerFoto() {
+  document.getElementById('foto-input').value='';
+  document.getElementById('preview-img').style.display='none';
+  document.getElementById('preview-img').src='';
+  document.getElementById('remove-foto').style.display='none';
+  document.getElementById('upload-zone').classList.remove('has-file');
+  document.getElementById('upload-zone').querySelector('.upload-title').textContent='Toque para enviar a foto';
+}
+
+// VALIDAÇÃO E ENVIO
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  if (msg) el.textContent = msg;
+  el.style.display = 'block';
+}
+function hideErr(id) { document.getElementById(id).style.display = 'none'; }
+
+async function enviar() {
+  let ok = true;
+  ['err-nome','err-nick','err-dnasc','err-cpf','err-foto','err-consent'].forEach(hideErr);
+
+  const nome = document.getElementById('nome').value.trim();
+  const nick = document.getElementById('nick').value.trim();
+  const dnasc = document.getElementById('dnasc').value;
+  const cpf = document.getElementById('cpf').value;
+  const foto = document.getElementById('foto-input').files[0];
+  const consent = document.getElementById('consent').checked;
+
+  if (!nome || nome.split(' ').filter(Boolean).length < 2) { showErr('err-nome'); ok=false; }
+  if (nick.length < 3) { showErr('err-nick'); ok=false; }
+  if (!dnasc || dnasc > max18) { showErr('err-dnasc'); ok=false; }
+  if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
+  if (!foto) { showErr('err-foto'); ok=false; }
+  if (!consent) { showErr('err-consent'); ok=false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Enviando...';
+
+  // Atualizar steps
+  document.getElementById('dot1').classList.remove('active');
+  document.getElementById('dot1').classList.add('done');
+  document.getElementById('dot2').classList.add('active');
+
+  const fd = new FormData();
+  fd.append('nome_completo', nome);
+  fd.append('nick', nick);
+  fd.append('data_nascimento', dnasc);
+  fd.append('cpf', cpf);
+  fd.append('endereco', document.getElementById('endereco').value.trim());
+  fd.append('foto', foto);
+
+  try {
+    const res = await fetch('/api/cadastro', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!res.ok) {
+      btn.disabled = false;
+      btn.textContent = 'Enviar cadastro';
+      showErr('err-nome', data.erro || 'Erro ao enviar. Tente novamente.');
+      document.getElementById('err-nome').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('dot2').classList.remove('active');
+    document.getElementById('dot2').classList.add('done');
+    document.getElementById('dot3').classList.add('active');
+    document.getElementById('form-body').style.display = 'none';
+    document.getElementById('success-screen').style.display = 'block';
+
+  } catch {
+    btn.disabled = false;
+    btn.textContent = 'Enviar cadastro';
+    alert('Erro de conexão. Verifique sua internet e tente novamente.');
+  }
+}
+</script>
+</body>
+</html>
