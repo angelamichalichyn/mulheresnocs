@@ -354,8 +354,21 @@ input[type=file] { display: none; }
       </div>
 
       <div class="field">
+        <label>Telefone / WhatsApp</label>
+        <input type="text" id="telefone" placeholder="(00) 00000-0000" maxlength="15" oninput="maskTel(this)">
+        <div class="err" id="err-telefone">Insira um telefone válido.</div>
+      </div>
+
+      <div class="field">
         <label>Endereço <span class="opt">(opcional)</span></label>
-        <input type="text" id="endereco" placeholder="Cidade, estado">
+        <input type="text" id="endereco" placeholder="Rua, número, bairro">
+      </div>
+
+      <div class="field">
+        <label>Cidade</label>
+        <input type="text" id="cidade" placeholder="Sua cidade" autocomplete="off">
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">📦 Necessário para sorteios, brindes e eventos presenciais</div>
+        <div class="err" id="err-cidade">Insira sua cidade.</div>
       </div>
 
       <!-- VERIFICAÇÃO DE IDENTIDADE -->
@@ -439,6 +452,14 @@ function validarCPF() {
   }
 }
 
+function maskTel(el) {
+  let v = el.value.replace(/\D/g,'').slice(0,11);
+  if (v.length > 10) v = v.replace(/(\d{2})(\d{5})(\d{4})/,'($1) $2-$3');
+  else if (v.length > 6) v = v.replace(/(\d{2})(\d{4,5})(\d{0,4})/,'($1) $2-$3');
+  else if (v.length > 2) v = v.replace(/(\d{2})(\d+)/,'($1) $2');
+  el.value = v;
+}
+
 function checkNick() {
   const v = document.getElementById('nick').value.trim();
   if (v.length >= 3) hideErr('err-nick');
@@ -483,7 +504,7 @@ function hideErr(id) { document.getElementById(id).style.display = 'none'; }
 
 async function enviar() {
   let ok = true;
-  ['err-nome','err-nick','err-dnasc','err-cpf','err-foto','err-consent'].forEach(hideErr);
+  ['err-nome','err-nick','err-dnasc','err-cpf','err-telefone','err-cidade','err-foto','err-consent'].forEach(hideErr);
 
   const nome = document.getElementById('nome').value.trim();
   const nick = document.getElementById('nick').value.trim();
@@ -496,6 +517,10 @@ async function enviar() {
   if (nick.length < 3) { showErr('err-nick'); ok=false; }
   if (!dnasc || dnasc > max18) { showErr('err-dnasc'); ok=false; }
   if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
+  const tel = document.getElementById('telefone').value.replace(/\D/g,'');
+  if (tel.length < 10) { showErr('err-telefone'); ok=false; }
+  const cidade = document.getElementById('cidade').value.trim();
+  if (!cidade) { showErr('err-cidade'); ok=false; }
   if (!foto) { showErr('err-foto'); ok=false; }
   if (!consent) { showErr('err-consent'); ok=false; }
   if (!ok) return;
@@ -514,7 +539,9 @@ async function enviar() {
   fd.append('nick', nick);
   fd.append('data_nascimento', dnasc);
   fd.append('cpf', cpf);
+  fd.append('telefone', document.getElementById('telefone').value.trim());
   fd.append('endereco', document.getElementById('endereco').value.trim());
+  fd.append('cidade', document.getElementById('cidade').value.trim());
   fd.append('foto', foto);
 
   try {
