@@ -255,6 +255,7 @@ async function carregarCadastros() {
   if (!data || !data.cadastros.length) {
     tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum cadastro aqui.</td></tr>'; return;
   }
+  cadastrosCache = data.cadastros;
   tbody.innerHTML = data.cadastros.map(c => `
     <tr>
       <td class="name-cell"><strong>${esc(c.nome_completo)}</strong><span>@${esc(c.nick)}</span></td>
@@ -297,10 +298,19 @@ async function abrirModal(id) {
     if (btn && btn.getAttribute('onclick')?.includes(id)) {
       const cells = row.querySelectorAll('td');
       document.getElementById('modal-info').innerHTML = `
-        <div class="info-item"><div class="lbl">Nome</div><div class="val">${cells[0]?.querySelector('strong')?.textContent || '—'}</div></div>
-        <div class="info-item"><div class="lbl">Nick</div><div class="val">${cells[0]?.querySelector('span')?.textContent || '—'}</div></div>
-        <div class="info-item"><div class="lbl">Nascimento</div><div class="val">${cells[1]?.textContent || '—'}</div></div>
-        <div class="info-item"><div class="lbl">CPF Receita</div><div class="val">${cells[2]?.querySelector('.badge')?.textContent || '—'}</div></div>
+        <div class="info-item"><div class="lbl">Nome</div><div class="val">${esc(c.nome_completo)}</div></div>
+        <div class="info-item"><div class="lbl">Nick</div><div class="val" id="modal-nick-val">@${esc(c.nick)}</div></div>
+        <div class="info-item"><div class="lbl">Nascimento</div><div class="val">${fmtData(c.data_nascimento)}</div></div>
+        <div class="info-item"><div class="lbl">Telefone</div><div class="val">${esc(c.telefone || '—')}</div></div>
+        <div class="info-item"><div class="lbl">Cidade</div><div class="val">${esc(c.cidade || '—')}</div></div>
+        <div class="info-item"><div class="lbl">CPF Receita</div><div class="val">${c.cpf_situacao === 'REGULAR' ? 'Regular' : c.cpf_situacao === 'NAO_VERIFICADO' ? 'Verificar doc.' : (c.cpf_situacao || '—')}</div></div>
+        <div class="info-item" style="grid-column:1/-1">
+          <div class="lbl">Alterar nick</div>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <input type="text" id="nick-edit" value="${esc(c.nick)}" style="flex:1;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;background:var(--cream)">
+            <button class="btn" onclick="alterarNick('${c.id}')">Salvar</button>
+          </div>
+        </div>
       `;
       break;
     }
