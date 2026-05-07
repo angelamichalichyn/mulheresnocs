@@ -1,69 +1,120 @@
-const { getPool } = require('../db');
-const { deletarFoto } = require('../cloudinary');
-const jwt = require('jsonwebtoken');
+const { uploadFoto } = require('./cloudinary');
+const { consultarCPF } = require('./cpf');
+const { getPool } = require('./db');
+const bcrypt = require('bcryptjs');
 
-function verificarToken(req) {
-  const auth = req.headers.authorization;
-  if (!auth) return null;
-  try { return jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET); }
-  catch { return null; }
-}
+export const config = { api: { bodyParser: false } };
 
 module.exports = async (req, res) => {
-  const admin = verificarToken(req);
-  if (!admin) return res.status(401).json({ erro: 'Não autenticado' });
+  if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido' });
 
-  const pool = getPool();
-  const { id, stats, status, page } = req.query;
+  try {
+    const { fields, file } = await parseMultipart(req);
+    const { nome_completo, nick, data_nascimento, cpf, telefone, endereco, cidade } = fields;
 
-  if (req.method === 'GET' && stats) {
-    const { rows } = await pool.query('SELECT status, COUNT(*) as total FROM cadastros GROUP BY status');
-    const result = { pendente: 0, aprovado: 0, rejeitado: 0 };
-    rows.forEach(r => (result[r.status] = parseInt(r.total)));
-    return res.status(200).json(result);
-  }
+    if (!nome_completo || !nick || !data_nascimento || !cpf || !cidade)
+      return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
+    if (!file)
+      return res.status(400).json({ erro: 'Foto com documento é obrigatória' });
 
-  if (req.method === 'GET' && id) {
-    const { rows } = await pool.query('SELECT foto_url FROM cadastros WHERE id = $1', [id]);
-    if (!rows[0]?.foto_url) return res.status(404).json({ erro: 'Foto não encontrada' });
-    return res.status(200).json({ url: rows[0].foto_url });
-  }
+    const nasc = new Date(data_nascimento);
+    const hoje = new Date();
+    const idade = hoje.getFullYear() - nasc.getFullYear()
+      - (hoje < new Date(hoje.getFullYear(), nasc.getMonth(), nasc.getDate()) ? 1 : 0);
+    if (idade < 18) return res.status(400).json({ erro: 'É necessário ter 18 anos ou mais' });
 
-  if (req.method === 'GET') {
-    const s = status || 'pendente';
-    const p = parseInt(page || '1');
-    const limit = 20;
-    const offset = (p - 1) * limit;
-    const { rows } = await pool.query(
-      `SELECT id, nome_completo, nick, data_nascimento, endereco,
-              cpf_situacao, cpf_nome_receita, status, motivo_rejeicao, criado_em
-       FROM cadastros WHERE status = $1 ORDER BY criado_em ASC LIMIT $2 OFFSET $3`,
-      [s, limit, offset]
+    const pool = getPool();
+
+    const nickCheck = await pool.query(
+      "SELECT 1 FROM cadastros WHERE nick = $1 AND status = 'aprovado'", [nick.trim()]
     );
-    const total = await pool.query('SELECT COUNT(*) FROM cadastros WHERE status=$1', [s]);
-    return res.status(200).json({ cadastros: rows, total: parseInt(total.rows[0].count), page: p });
-  }
+    if (nickCheck.rows.length > 0) return res.status(409).json({ erro: 'Este nick já está em uso' });
 
-  if (req.method === 'PATCH') {
-    const { id: cid, acao, motivo } = req.body;
-    if (!['aprovar', 'rejeitar'].includes(acao)) return res.status(400).json({ erro: 'Ação inválida' });
-    const novoStatus = acao === 'aprovar' ? 'aprovado' : 'rejeitado';
-    const { rows } = await pool.query(
-      `UPDATE cadastros SET status=$1, motivo_rejeicao=$2, revisado_por=$3, revisado_em=NOW()
-       WHERE id=$4 RETURNING foto_public_id`,
-      [novoStatus, motivo || null, admin.id, cid]
-    );
-    if (!rows[0]) return res.status(404).json({ erro: 'Cadastro não encontrado' });
-    if (rows[0].foto_public_id) {
-      await deletarFoto(rows[0].foto_public_id);
-      await pool.query('UPDATE cadastros SET foto_public_id=NULL, foto_url=NULL WHERE id=$1', [cid]);
+    const cpfResult = await consultarCPF(cpf);
+    if (!cpfResult.valido) return res.status(400).json({ erro: cpfResult.erro || 'CPF inválido' });
+
+    const cpfHash = await bcrypt.hash(cpf.replace(/\D/g, ''), 12);
+
+    let fotoUrl = null, fotoPublicId = null;
+    try {
+      const resultado = await uploadFoto(file.buffer, file.mimetype);
+      fotoUrl = resultado.secure_url;
+      fotoPublicId = resultado.public_id;
+    } catch (err) {
+      console.error('Erro upload:', err.message);
+      return res.status(500).json({ erro: 'Erro ao enviar foto. Tente novamente.' });
     }
-    await pool.query(
-      'INSERT INTO audit_log (admin_id, acao, cadastro_id, detalhes) VALUES ($1,$2,$3,$4)',
-      [admin.id, novoStatus, cid, JSON.stringify({ motivo })]
-    );
-    return res.status(200).json({ mensagem: `Cadastro ${novoStatus}.` });
-  }
 
-  return res.status(404).json({ erro: 'Rota não encontrada' });
+    await pool.query(
+      `INSERT INTO cadastros (nome_completo, nick, data_nascimento, telefone, endereco, cidade, cpf_hash, cpf_situacao, cpf_nome_receita, foto_url, foto_public_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [nome_completo.trim(), nick.trim(), data_nascimento, telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
+       cpfHash, cpfResult.situacao || 'REGULAR', cpfResult.nome || null, fotoUrl, fotoPublicId]
+    );
+
+    return res.status(201).json({ mensagem: 'Cadastro recebido! Uma administradora irá revisar em até 48h.' });
+  } catch (err) {
+    console.error('Erro geral:', err.message);
+    return res.status(500).json({ erro: 'Erro interno. Tente novamente.' });
+  }
 };
+
+function parseMultipart(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', d => chunks.push(d));
+    req.on('end', () => {
+      const body = Buffer.concat(chunks);
+      const contentType = req.headers['content-type'] || '';
+      const boundary = contentType.split('boundary=')[1]?.trim();
+      if (!boundary) return reject(new Error('Boundary não encontrado'));
+      const fields = {};
+      let file = null;
+      const boundaryBuf = Buffer.from('--' + boundary);
+      const parts = splitBuffer(body, boundaryBuf);
+      for (const part of parts) {
+        if (!part || part.length < 4) continue;
+        const sep = Buffer.from('\r\n\r\n');
+        const sepIdx = indexOf(part, sep);
+        if (sepIdx === -1) continue;
+        const headerBuf = part.slice(0, sepIdx).toString('utf8');
+        let dataBuf = part.slice(sepIdx + 4);
+        if (dataBuf.slice(-2).toString() === '\r\n') dataBuf = dataBuf.slice(0, -2);
+        const nameMatch = headerBuf.match(/name="([^"]+)"/);
+        const filenameMatch = headerBuf.match(/filename="([^"]+)"/);
+        const mimeMatch = headerBuf.match(/Content-Type:\s*([^\r\n]+)/i);
+        if (!nameMatch) continue;
+        if (filenameMatch) {
+          file = { buffer: dataBuf, filename: filenameMatch[1], mimetype: mimeMatch?.[1]?.trim() || 'image/jpeg' };
+        } else {
+          fields[nameMatch[1]] = dataBuf.toString('utf8');
+        }
+      }
+      resolve({ fields, file });
+    });
+    req.on('error', reject);
+  });
+}
+
+function indexOf(buf, search) {
+  for (let i = 0; i <= buf.length - search.length; i++) {
+    let found = true;
+    for (let j = 0; j < search.length; j++) {
+      if (buf[i + j] !== search[j]) { found = false; break; }
+    }
+    if (found) return i;
+  }
+  return -1;
+}
+
+function splitBuffer(buf, delimiter) {
+  const parts = [];
+  let start = 0, idx;
+  while ((idx = indexOf(buf.slice(start), delimiter)) !== -1) {
+    parts.push(buf.slice(start, start + idx));
+    start += idx + delimiter.length;
+    if (buf[start] === 13 && buf[start + 1] === 10) start += 2;
+    if (buf[start] === 45 && buf[start + 1] === 45) break;
+  }
+  return parts;
+}
