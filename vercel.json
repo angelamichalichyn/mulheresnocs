@@ -1,10 +1,8 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "api/**/*.js", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/(.*)", "dest": "/public/$1" }
+  "outputDirectory": "public",
+  "rewrites": [
+    { "source": "/api/cadastro", "destination": "/api/cadastro" },
+    { "source": "/api/admin/login", "destination": "/api/admin/login" },
+    { "source": "/api/admin/cadastros", "destination": "/api/admin/cadastros" }
   ]
 }
