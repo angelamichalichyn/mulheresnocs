@@ -1,8 +1,11 @@
 {
-  "outputDirectory": "public",
+  "version": 2,
+  "functions": {
+    "api/**/*.js": {
+      "includeFiles": "utils/**"
+    }
+  },
   "rewrites": [
-    { "source": "/api/cadastro", "destination": "/api/cadastro" },
-    { "source": "/api/admin/login", "destination": "/api/admin/login" },
-    { "source": "/api/admin/cadastros", "destination": "/api/admin/cadastros" }
+    { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
 }
