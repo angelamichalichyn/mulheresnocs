@@ -366,7 +366,7 @@ input[type=file] { display: none; }
       </div>
 
       <div class="field">
-        <label>Selfie segurando documento com foto</label>
+        <label>Selfie com documento <span class="opt">(obrigatório se não enviar vídeo)</span></label>
         <div class="upload-zone" id="upload-zone" onclick="document.getElementById('foto-input').click()">
           <div class="upload-icon">📸</div>
           <div class="upload-title">Toque para enviar a foto</div>
@@ -375,11 +375,11 @@ input[type=file] { display: none; }
         <input type="file" id="foto-input" accept="image/jpeg,image/png" onchange="previewFoto(this)">
         <img class="preview-img" id="preview-img" alt="Prévia da foto">
         <button class="remove-foto" id="remove-foto" onclick="removerFoto()">✕ Remover foto</button>
-        <div class="err" id="err-foto">A foto com documento é obrigatória.</div>
+        <div class="err" id="err-foto">Envie a foto com documento ou o vídeo de verificação.</div>
       </div>
 
       <div class="field" style="margin-top:.25rem">
-        <label>Vídeo de verificação <span class="opt">(opcional mas recomendado)</span></label>
+        <label>Vídeo de verificação <span class="opt">(substitui a foto)</span></label>
         <div style="background:#FBF4E8;border-left:3px solid #BA7517;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#633806;line-height:1.6">
           🎥 Grave um vídeo curto dizendo seu <strong>nome</strong>, seu <strong>nick</strong> e mostrando seu <strong>perfil da Steam</strong> na tela. Isso acelera muito a aprovação!
         </div>
@@ -541,7 +541,8 @@ async function enviar() {
   if (nick.length < 3) { showErr('err-nick'); ok=false; }
   if (!dnasc || dnasc > max18) { showErr('err-dnasc'); ok=false; }
   if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
-  if (!foto) { showErr('err-foto'); ok=false; }
+  const videoFile = document.getElementById('video-input')?.files[0];
+  if (!foto && !videoFile) { showErr('err-foto'); ok=false; }
   if (!consent) { showErr('err-consent'); ok=false; }
   if (!ok) return;
 
