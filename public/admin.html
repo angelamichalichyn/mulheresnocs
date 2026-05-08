@@ -26,6 +26,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .btn.approve:hover{background:var(--green-light)}
 .btn.reject{border-color:var(--red);color:var(--red)}
 .btn.reject:hover{background:var(--red-light)}
+.btn.excel{border-color:#1D6F42;color:#1D6F42;display:flex;align-items:center;gap:6px}
+.btn.excel:hover{background:#E8F5EE}
 .error-msg{background:var(--red-light);color:#A32D2D;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
 #app{display:none}
 .topbar{background:var(--rose-dark);padding:.9rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
@@ -39,7 +41,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
 .stat .num{font-size:26px;font-weight:500}
 .stat.p .num{color:var(--amber)}.stat.a .num{color:var(--green)}.stat.r .num{color:var(--red)}
-.tabs{display:flex;gap:6px;margin-bottom:1.25rem}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:10px}
+.tabs{display:flex;gap:6px}
 .tab{padding:7px 18px;border-radius:20px;border:1.5px solid var(--border);background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);font-weight:500}
 .tab.active{background:var(--rose);color:#fff;border-color:var(--rose)}
 .cnt{display:inline-block;background:rgba(255,255,255,.25);border-radius:10px;font-size:11px;padding:1px 7px;margin-left:5px}
@@ -63,9 +66,11 @@ tr:hover td{background:var(--cream)}
 .modal-bg.open{display:flex}
 .modal{background:var(--surface);border-radius:20px;padding:1.75rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
 .modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--rose-dark);margin-bottom:1.25rem}
-.foto-box{background:var(--cream);border-radius:var(--radius);min-height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;overflow:hidden;border:1px solid var(--border)}
+.foto-box{background:var(--cream);border-radius:var(--radius);min-height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;overflow:hidden;border:1px solid var(--border)}
 .foto-box img{max-width:100%;max-height:280px;display:block;object-fit:cover}
 .foto-box .hint{color:var(--hint);font-size:13px}
+.video-box{background:var(--cream);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;border:1px solid var(--border);display:none}
+.video-box video{width:100%;max-height:220px;display:block}
 .lgpd-note{font-size:11px;color:var(--hint);text-align:center;margin-bottom:1.25rem}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
 .info-item .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
@@ -105,14 +110,21 @@ tr:hover td{background:var(--cream)}
       <div class="stat a"><div class="lbl">Aprovadas</div><div class="num" id="stat-a">—</div></div>
       <div class="stat r"><div class="lbl">Rejeitadas</div><div class="num" id="stat-r">—</div></div>
     </div>
-    <div class="tabs">
-      <button class="tab active" onclick="mudarAba('pendente',this)">Pendentes <span class="cnt" id="cnt-p">0</span></button>
-      <button class="tab" onclick="mudarAba('aprovado',this)">Aprovadas <span class="cnt" id="cnt-a">0</span></button>
-      <button class="tab" onclick="mudarAba('rejeitado',this)">Rejeitadas <span class="cnt" id="cnt-r">0</span></button>
+
+    <div class="toolbar">
+      <div class="tabs">
+        <button class="tab active" onclick="mudarAba('pendente',this)">Pendentes <span class="cnt" id="cnt-p">0</span></button>
+        <button class="tab" onclick="mudarAba('aprovado',this)">Aprovadas <span class="cnt" id="cnt-a">0</span></button>
+        <button class="tab" onclick="mudarAba('rejeitado',this)">Rejeitadas <span class="cnt" id="cnt-r">0</span></button>
+      </div>
+      <button class="btn excel" onclick="exportarExcel()">
+        📊 Exportar Excel
+      </button>
     </div>
+
     <div class="card">
       <table>
-        <thead><tr><th>Nome / Nick</th><th>Nasc.</th><th>Cidade</th><th>CPF</th><th>Recebido</th><th></th></tr></thead>
+        <thead><tr><th>Nome / Nick</th><th>Nasc.</th><th>Cidade</th><th>Telefone</th><th>CPF</th><th>Recebido</th><th></th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -123,7 +135,10 @@ tr:hover td{background:var(--cream)}
   <div class="modal">
     <h3>Revisar cadastro</h3>
     <div class="foto-box" id="foto-box"><span class="hint">Carregando...</span></div>
-    <div class="lgpd-note">A foto será deletada permanentemente após sua decisão.</div>
+    <div class="video-box" id="video-box">
+      <video id="modal-video" controls></video>
+    </div>
+    <div class="lgpd-note">A foto/vídeo será deletada permanentemente após sua decisão.</div>
     <div class="info-grid" id="modal-info"></div>
     <div class="motivo-field" id="motivo-field">
       <label>Motivo da rejeição (opcional)</label>
@@ -154,8 +169,7 @@ async function fazerLogin() {
   if (!email || !senha) { err.textContent = 'Preencha e-mail e senha.'; err.style.display = 'block'; return; }
   try {
     const res = await fetch(`${API}/admin/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, senha })
     });
     const data = await res.json();
@@ -187,12 +201,11 @@ async function carregarStats() {
 
 async function carregarCadastros() {
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
   const data = await req('GET', `/admin/cadastros?status=${abaAtual}`);
   if (!data || !data.cadastros.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum cadastro aqui.</td></tr>';
-    cache = [];
-    return;
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum cadastro aqui.</td></tr>';
+    cache = []; return;
   }
   cache = data.cadastros;
   tbody.innerHTML = cache.map(c => `
@@ -200,7 +213,8 @@ async function carregarCadastros() {
       <td class="name-cell"><strong>${esc(c.nome_completo)}</strong><span>@${esc(c.nick)}</span></td>
       <td>${fmtData(c.data_nascimento)}</td>
       <td>${esc(c.cidade || '—')}</td>
-      <td><span class="badge ${c.cpf_situacao === 'REGULAR' ? 'regular' : 'verificar'}">${c.cpf_situacao === 'REGULAR' ? 'Regular' : 'Verificar doc.'}</span></td>
+      <td>${esc(c.telefone || '—')}</td>
+      <td><span class="badge ${c.cpf_situacao === 'REGULAR' ? 'regular' : 'verificar'}">${c.cpf_situacao === 'REGULAR' ? 'Regular' : 'Verificar'}</span></td>
       <td style="color:var(--muted)">${fmtDataHora(c.criado_em)}</td>
       <td><button class="btn" onclick="abrirModal('${c.id}')">Ver</button></td>
     </tr>
@@ -219,10 +233,11 @@ async function abrirModal(id) {
   document.getElementById('modal-bg').classList.add('open');
   document.getElementById('motivo-field').style.display = 'none';
   document.getElementById('motivo-txt').value = '';
+  document.getElementById('video-box').style.display = 'none';
 
-  // Foto
   const fotoBox = document.getElementById('foto-box');
   fotoBox.innerHTML = '<span class="hint">Carregando foto...</span>';
+
   const fotoData = await req('GET', `/admin/cadastros?id=${id}`);
   if (fotoData?.url) {
     fotoBox.innerHTML = `<img src="${fotoData.url}" alt="Selfie com documento">`;
@@ -230,7 +245,12 @@ async function abrirModal(id) {
     fotoBox.innerHTML = '<span class="hint">Foto indisponível</span>';
   }
 
-  // Dados do cache
+  // Vídeo
+  if (fotoData?.video_url) {
+    document.getElementById('modal-video').src = fotoData.video_url;
+    document.getElementById('video-box').style.display = 'block';
+  }
+
   const c = cache.find(x => x.id === id);
   if (!c) return;
 
@@ -257,15 +277,13 @@ async function alterarNick(id) {
   const novoNick = document.getElementById('nick-edit').value.trim();
   if (novoNick.length < 3) { alert('Nick precisa ter pelo menos 3 caracteres.'); return; }
   const res = await req('PATCH', '/admin/cadastros?action=nick', { id, nick: novoNick });
-  if (res) {
-    alert('Nick atualizado com sucesso!');
-    fecharModal();
-    carregarCadastros();
-  }
+  if (res) { alert('Nick atualizado!'); fecharModal(); carregarCadastros(); }
 }
 
 function fecharModal() {
   document.getElementById('modal-bg').classList.remove('open');
+  const v = document.getElementById('modal-video');
+  v.pause(); v.src = '';
   cadastroAtivoId = null;
 }
 
@@ -278,6 +296,46 @@ async function decidir(acao) {
   const motivo = document.getElementById('motivo-txt').value;
   const res = await req('PATCH', '/admin/cadastros', { id: cadastroAtivoId, acao, motivo });
   if (res) { fecharModal(); carregarStats(); carregarCadastros(); }
+}
+
+// =================== EXPORTAR EXCEL ===================
+async function exportarExcel() {
+  // Busca TODOS os cadastros do status atual (sem paginação)
+  const data = await req('GET', `/admin/cadastros?status=${abaAtual}&limit=9999`);
+  if (!data || !data.cadastros.length) { alert('Nenhum cadastro para exportar.'); return; }
+
+  const titulos = { pendente: 'Pendentes', aprovado: 'Aprovadas', rejeitado: 'Rejeitadas' };
+  const linhas = [
+    ['Nome Completo', 'Nick', 'Data Nasc.', 'Telefone', 'Cidade', 'Endereço', 'CPF Receita', 'Status', 'Recebido em']
+  ];
+
+  data.cadastros.forEach(c => {
+    linhas.push([
+      c.nome_completo || '',
+      c.nick || '',
+      c.data_nascimento ? new Date(c.data_nascimento).toLocaleDateString('pt-BR') : '',
+      c.telefone || '',
+      c.cidade || '',
+      c.endereco || '',
+      c.cpf_situacao || '',
+      c.status || '',
+      c.criado_em ? new Date(c.criado_em).toLocaleString('pt-BR') : '',
+    ]);
+  });
+
+  // Gerar CSV (compatível com Excel)
+  const csv = linhas.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')
+  ).join('\n');
+
+  const bom = '\uFEFF'; // BOM para Excel reconhecer UTF-8
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `mulheresnocs_${abaAtual}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 async function req(method, path, body) {
