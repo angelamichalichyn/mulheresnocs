@@ -342,7 +342,7 @@ input[type=file] { display: none; }
         <div class="field">
           <label>Data de nascimento</label>
           <input type="date" id="dnasc" max="">
-          <div class="err" id="err-dnasc">Você precisa ter 18 anos ou mais.</div>
+          <div class="err" id="err-dnasc">Você precisa ter 16 anos ou mais.</div>
         </div>
       </div>
 
@@ -354,42 +354,8 @@ input[type=file] { display: none; }
       </div>
 
       <div class="field">
-        <label>WhatsApp</label>
-        <div style="display:flex;gap:8px;align-items:stretch">
-          <select id="tel-pais" style="padding:11px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;flex-shrink:0;width:110px;-webkit-appearance:auto">
-            <option value="+55">🇧🇷 +55</option>
-            <option value="+1">🇺🇸 +1</option>
-            <option value="+351">🇵🇹 +351</option>
-            <option value="+54">🇦🇷 +54</option>
-            <option value="+56">🇨🇱 +56</option>
-            <option value="+57">🇨🇴 +57</option>
-            <option value="+595">🇵🇾 +595</option>
-            <option value="+598">🇺🇾 +598</option>
-            <option value="+58">🇻🇪 +58</option>
-            <option value="+51">🇵🇪 +51</option>
-            <option value="+591">🇧🇴 +591</option>
-            <option value="+593">🇪🇨 +593</option>
-            <option value="+49">🇩🇪 +49</option>
-            <option value="+44">🇬🇧 +44</option>
-            <option value="+34">🇪🇸 +34</option>
-            <option value="+other">🌍 Outro</option>
-          </select>
-          <input type="text" id="telefone" placeholder="Número sem código do país" style="flex:1;min-width:0;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text)" autocomplete="off">
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">Usado para contato e entrada na comunidade</div>
-        <div class="err" id="err-telefone">Insira um número de WhatsApp válido.</div>
-      </div>
-
-      <div class="field">
         <label>Endereço <span class="opt">(opcional)</span></label>
-        <input type="text" id="endereco" placeholder="Rua, número, bairro">
-      </div>
-
-      <div class="field">
-        <label>Cidade</label>
-        <input type="text" id="cidade" placeholder="Sua cidade" autocomplete="off">
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">📦 Necessário para sorteios, brindes e eventos presenciais</div>
-        <div class="err" id="err-cidade">Insira sua cidade.</div>
+        <input type="text" id="endereco" placeholder="Cidade, estado">
       </div>
 
       <!-- VERIFICAÇÃO DE IDENTIDADE -->
@@ -400,16 +366,32 @@ input[type=file] { display: none; }
       </div>
 
       <div class="field">
-        <label>Selfie com documento</label>
+        <label>Selfie segurando documento com foto</label>
         <div class="upload-zone" id="upload-zone" onclick="document.getElementById('foto-input').click()">
           <div class="upload-icon">📸</div>
           <div class="upload-title">Toque para enviar a foto</div>
-          <div class="upload-sub">Seu rosto + documento visível<br>JPG ou PNG — máx. 8 MB</div>
+          <div class="upload-sub">Seu rosto + RG, CNH ou passaporte visível<br>JPG ou PNG — máx. 8 MB</div>
         </div>
         <input type="file" id="foto-input" accept="image/jpeg,image/png" onchange="previewFoto(this)">
-        <img class="preview-img" id="preview-img" alt="Prévia">
+        <img class="preview-img" id="preview-img" alt="Prévia da foto">
         <button class="remove-foto" id="remove-foto" onclick="removerFoto()">✕ Remover foto</button>
         <div class="err" id="err-foto">A foto com documento é obrigatória.</div>
+      </div>
+
+      <div class="field" style="margin-top:.25rem">
+        <label>Vídeo de verificação <span class="opt">(opcional mas recomendado)</span></label>
+        <div style="background:#FBF4E8;border-left:3px solid #BA7517;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#633806;line-height:1.6">
+          🎥 Grave um vídeo curto dizendo seu <strong>nome</strong>, seu <strong>nick</strong> e mostrando seu <strong>perfil da Steam</strong> na tela. Isso acelera muito a aprovação!
+        </div>
+        <div class="upload-zone" id="upload-zone-video" onclick="document.getElementById('video-input').click()" style="border-color:#E2D5CF">
+          <div class="upload-icon">🎬</div>
+          <div class="upload-title">Toque para enviar o vídeo</div>
+          <div class="upload-sub">MP4, MOV ou AVI — máx. 50 MB</div>
+        </div>
+        <input type="file" id="video-input" accept="video/mp4,video/quicktime,video/avi,video/*" onchange="previewVideo(this)">
+        <video id="preview-video" style="display:none;width:100%;max-height:200px;border-radius:8px;margin-top:12px" controls></video>
+        <button class="remove-foto" id="remove-video" onclick="removerVideo()">✕ Remover vídeo</button>
+        <div class="err" id="err-video">Arquivo muito grande. Máximo 50 MB.</div>
       </div>
 
       <!-- CONSENTIMENTO -->
@@ -439,7 +421,7 @@ input[type=file] { display: none; }
 <script>
 // DATA MÁXIMA (18 anos)
 const hoje = new Date();
-const max18 = new Date(hoje.getFullYear()-18, hoje.getMonth(), hoje.getDate()).toISOString().split('T')[0];
+const max18 = new Date(hoje.getFullYear()-16, hoje.getMonth(), hoje.getDate()).toISOString().split('T')[0];
 document.getElementById('dnasc').max = max18;
 
 // MÁSCARA CPF
@@ -498,6 +480,35 @@ function previewFoto(input) {
   reader.readAsDataURL(file);
 }
 
+function previewVideo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 50*1024*1024) {
+    document.getElementById('err-video').style.display = 'block';
+    input.value = ''; return;
+  }
+  document.getElementById('err-video').style.display = 'none';
+  const url = URL.createObjectURL(file);
+  const vid = document.getElementById('preview-video');
+  vid.src = url;
+  vid.style.display = 'block';
+  document.getElementById('remove-video').style.display = 'block';
+  const zone = document.getElementById('upload-zone-video');
+  zone.classList.add('has-file');
+  zone.querySelector('.upload-title').textContent = '✓ Vídeo adicionado';
+}
+
+function removerVideo() {
+  document.getElementById('video-input').value = '';
+  const vid = document.getElementById('preview-video');
+  vid.style.display = 'none';
+  vid.src = '';
+  document.getElementById('remove-video').style.display = 'none';
+  const zone = document.getElementById('upload-zone-video');
+  zone.classList.remove('has-file');
+  zone.querySelector('.upload-title').textContent = 'Toque para enviar o vídeo';
+}
+
 function removerFoto() {
   document.getElementById('foto-input').value='';
   document.getElementById('preview-img').style.display='none';
@@ -517,7 +528,7 @@ function hideErr(id) { document.getElementById(id).style.display = 'none'; }
 
 async function enviar() {
   let ok = true;
-  ['err-nome','err-nick','err-dnasc','err-cpf','err-telefone','err-cidade','err-foto','err-consent'].forEach(hideErr);
+  ['err-nome','err-nick','err-dnasc','err-cpf','err-foto','err-consent'].forEach(hideErr);
 
   const nome = document.getElementById('nome').value.trim();
   const nick = document.getElementById('nick').value.trim();
@@ -530,10 +541,6 @@ async function enviar() {
   if (nick.length < 3) { showErr('err-nick'); ok=false; }
   if (!dnasc || dnasc > max18) { showErr('err-dnasc'); ok=false; }
   if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
-  const tel = document.getElementById('telefone').value.replace(/\D/g,'');
-  if (tel.length < 5) { showErr('err-telefone'); ok=false; }
-  const cidade = document.getElementById('cidade').value.trim();
-  if (!cidade) { showErr('err-cidade'); ok=false; }
   if (!foto) { showErr('err-foto'); ok=false; }
   if (!consent) { showErr('err-consent'); ok=false; }
   if (!ok) return;
@@ -552,12 +559,10 @@ async function enviar() {
   fd.append('nick', nick);
   fd.append('data_nascimento', dnasc);
   fd.append('cpf', cpf);
-  const pais = document.getElementById('tel-pais').value;
-  const telNum = document.getElementById('telefone').value.trim();
-  fd.append('telefone', pais + ' ' + telNum);
   fd.append('endereco', document.getElementById('endereco').value.trim());
-  fd.append('cidade', document.getElementById('cidade').value.trim());
   fd.append('foto', foto);
+  const videoFile = document.getElementById('video-input').files[0];
+  if (videoFile) fd.append('video', videoFile);
 
   try {
     const res = await fetch('/api/cadastro', { method: 'POST', body: fd });
