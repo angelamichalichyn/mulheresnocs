@@ -18,8 +18,8 @@ module.exports = async (req, res) => {
     const foto = files.foto;
     const video = files.video || null;
 
-    if (!foto)
-      return res.status(400).json({ erro: 'Foto com documento é obrigatória' });
+    if (!foto && !video)
+      return res.status(400).json({ erro: 'Envie a foto com documento ou o vídeo de verificação' });
 
     const nasc = new Date(data_nascimento);
     const hoje = new Date();
