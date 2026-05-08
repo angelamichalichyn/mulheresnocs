@@ -9,19 +9,23 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido' });
 
   try {
-    const { fields, file } = await parseMultipart(req);
+    const { fields, files } = await parseMultipart(req);
     const { nome_completo, nick, data_nascimento, cpf, telefone, endereco, cidade } = fields;
 
     if (!nome_completo || !nick || !data_nascimento || !cpf || !cidade)
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
-    if (!file)
+
+    const foto = files.foto;
+    const video = files.video || null;
+
+    if (!foto)
       return res.status(400).json({ erro: 'Foto com documento é obrigatória' });
 
     const nasc = new Date(data_nascimento);
     const hoje = new Date();
     const idade = hoje.getFullYear() - nasc.getFullYear()
       - (hoje < new Date(hoje.getFullYear(), nasc.getMonth(), nasc.getDate()) ? 1 : 0);
-    if (idade < 18) return res.status(400).json({ erro: 'É necessário ter 18 anos ou mais' });
+    if (idade < 16) return res.status(400).json({ erro: 'É necessário ter 16 anos ou mais' });
 
     const pool = getPool();
 
@@ -35,21 +39,42 @@ module.exports = async (req, res) => {
 
     const cpfHash = await bcrypt.hash(cpf.replace(/\D/g, ''), 12);
 
+    // Upload foto
     let fotoUrl = null, fotoPublicId = null;
     try {
-      const resultado = await uploadFoto(file.buffer, file.mimetype);
+      const resultado = await uploadFoto(foto.buffer, foto.mimetype);
       fotoUrl = resultado.secure_url;
       fotoPublicId = resultado.public_id;
     } catch (err) {
-      console.error('Erro upload:', err.message);
+      console.error('Erro upload foto:', err.message);
       return res.status(500).json({ erro: 'Erro ao enviar foto. Tente novamente.' });
     }
 
+    // Upload vídeo (opcional)
+    let videoUrl = null, videoPublicId = null;
+    if (video && video.buffer.length > 0) {
+      try {
+        const resultadoVideo = await uploadVideo(video.buffer, video.mimetype);
+        videoUrl = resultadoVideo.secure_url;
+        videoPublicId = resultadoVideo.public_id;
+      } catch (err) {
+        console.error('Erro upload vídeo:', err.message);
+        // Não bloqueia — vídeo é opcional
+      }
+    }
+
     await pool.query(
-      `INSERT INTO cadastros (nome_completo, nick, data_nascimento, telefone, endereco, cidade, cpf_hash, cpf_situacao, cpf_nome_receita, foto_url, foto_public_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
-      [nome_completo.trim(), nick.trim(), data_nascimento, telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
-       cpfHash, cpfResult.situacao || 'REGULAR', cpfResult.nome || null, fotoUrl, fotoPublicId]
+      `INSERT INTO cadastros
+        (nome_completo, nick, data_nascimento, telefone, endereco, cidade,
+         cpf_hash, cpf_situacao, cpf_nome_receita,
+         foto_url, foto_public_id, video_url, video_public_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+      [
+        nome_completo.trim(), nick.trim(), data_nascimento,
+        telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
+        cpfHash, cpfResult.situacao || 'REGULAR', cpfResult.nome || null,
+        fotoUrl, fotoPublicId, videoUrl, videoPublicId
+      ]
     );
 
     return res.status(201).json({ mensagem: 'Cadastro recebido! Uma administradora irá revisar em até 48h.' });
@@ -58,6 +83,18 @@ module.exports = async (req, res) => {
     return res.status(500).json({ erro: 'Erro interno. Tente novamente.' });
   }
 };
+
+// Upload de vídeo para Cloudinary
+async function uploadVideo(buffer, mimetype) {
+  const cloudinary = require('cloudinary').v2;
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder: 'mulheresnocs/videos', resource_type: 'video' },
+      (error, result) => { if (error) reject(error); else resolve(result); }
+    );
+    stream.end(buffer);
+  });
+}
 
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
@@ -69,7 +106,7 @@ function parseMultipart(req) {
       const boundary = contentType.split('boundary=')[1]?.trim();
       if (!boundary) return reject(new Error('Boundary não encontrado'));
       const fields = {};
-      let file = null;
+      const files = {};
       const boundaryBuf = Buffer.from('--' + boundary);
       const parts = splitBuffer(body, boundaryBuf);
       for (const part of parts) {
@@ -84,13 +121,18 @@ function parseMultipart(req) {
         const filenameMatch = headerBuf.match(/filename="([^"]+)"/);
         const mimeMatch = headerBuf.match(/Content-Type:\s*([^\r\n]+)/i);
         if (!nameMatch) continue;
+        const fieldName = nameMatch[1];
         if (filenameMatch) {
-          file = { buffer: dataBuf, filename: filenameMatch[1], mimetype: mimeMatch?.[1]?.trim() || 'image/jpeg' };
+          files[fieldName] = {
+            buffer: dataBuf,
+            filename: filenameMatch[1],
+            mimetype: mimeMatch?.[1]?.trim() || 'application/octet-stream'
+          };
         } else {
-          fields[nameMatch[1]] = dataBuf.toString('utf8');
+          fields[fieldName] = dataBuf.toString('utf8');
         }
       }
-      resolve({ fields, file });
+      resolve({ fields, files });
     });
     req.on('error', reject);
   });
