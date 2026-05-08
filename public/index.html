@@ -355,8 +355,8 @@ input[type=file] { display: none; }
 
       <div class="field">
         <label>WhatsApp</label>
-        <div style="display:flex;gap:8px">
-          <select id="tel-pais" style="padding:11px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;flex-shrink:0">
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <select id="tel-pais" style="padding:11px 8px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text);font-size:13px;font-family:'DM Sans',sans-serif;flex-shrink:0;width:110px;-webkit-appearance:auto">
             <option value="+55">🇧🇷 +55</option>
             <option value="+1">🇺🇸 +1</option>
             <option value="+351">🇵🇹 +351</option>
@@ -374,7 +374,7 @@ input[type=file] { display: none; }
             <option value="+34">🇪🇸 +34</option>
             <option value="+other">🌍 Outro</option>
           </select>
-          <input type="text" id="telefone" placeholder="Número sem código do país" style="flex:1" autocomplete="off" oninput="this.value=this.value.replace(/[^0-9\s\-\(\)]/g,'')">
+          <input type="text" id="telefone" placeholder="Número sem código do país" style="flex:1;min-width:0;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text)" autocomplete="off">
         </div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">Usado para contato e entrada na comunidade</div>
         <div class="err" id="err-telefone">Insira um número de WhatsApp válido.</div>
