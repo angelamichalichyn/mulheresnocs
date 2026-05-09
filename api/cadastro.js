@@ -1,3 +1,4 @@
+// api/cadastro.js
 const { uploadFoto } = require('./cloudinary');
 const { consultarCPF } = require('./cpf');
 const { getPool } = require('./db');
@@ -9,18 +10,17 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido' });
 
   try {
-    const { fields, files } = await parseMultipart(req);
-    const { nome_completo, nick, data_nascimento, cpf, telefone, endereco, cidade } = fields;
+    const { fields, file } = await parseMultipart(req);
+    const { nome_completo, nick, data_nascimento, cpf, telefone, endereco, cidade, video_url, video_public_id } = fields;
 
     if (!nome_completo || !nick || !data_nascimento || !cpf || !cidade)
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
 
-    const foto = files.foto;
-    const video = files.video || null;
-
-    if (!foto && !video)
+    // Foto OU vídeo obrigatório
+    if (!file && !video_url)
       return res.status(400).json({ erro: 'Envie a foto com documento ou o vídeo de verificação' });
 
+    // Mínimo 16 anos
     const nasc = new Date(data_nascimento);
     const hoje = new Date();
     const idade = hoje.getFullYear() - nasc.getFullYear()
@@ -28,38 +28,37 @@ module.exports = async (req, res) => {
     if (idade < 16) return res.status(400).json({ erro: 'É necessário ter 16 anos ou mais' });
 
     const pool = getPool();
+    const cpfLimpo = cpf.replace(/\D/g, '');
 
+    // Nick único — só bloqueia se aprovado
     const nickCheck = await pool.query(
       "SELECT 1 FROM cadastros WHERE nick = $1 AND status = 'aprovado'", [nick.trim()]
     );
     if (nickCheck.rows.length > 0) return res.status(409).json({ erro: 'Este nick já está em uso' });
 
+    // CPF duplicado — só bloqueia se já aprovado
+    const aprovados = await pool.query("SELECT cpf_hash FROM cadastros WHERE status = 'aprovado'");
+    for (const row of aprovados.rows) {
+      const igual = await bcrypt.compare(cpfLimpo, row.cpf_hash);
+      if (igual) return res.status(409).json({ erro: 'Este CPF já possui um cadastro aprovado na comunidade.' });
+    }
+
+    // Validar CPF
     const cpfResult = await consultarCPF(cpf);
     if (!cpfResult.valido) return res.status(400).json({ erro: cpfResult.erro || 'CPF inválido' });
 
-    const cpfHash = await bcrypt.hash(cpf.replace(/\D/g, ''), 12);
+    const cpfHash = await bcrypt.hash(cpfLimpo, 12);
 
-    // Upload foto
+    // Upload foto (se enviada)
     let fotoUrl = null, fotoPublicId = null;
-    try {
-      const resultado = await uploadFoto(foto.buffer, foto.mimetype);
-      fotoUrl = resultado.secure_url;
-      fotoPublicId = resultado.public_id;
-    } catch (err) {
-      console.error('Erro upload foto:', err.message);
-      return res.status(500).json({ erro: 'Erro ao enviar foto. Tente novamente.' });
-    }
-
-    // Upload vídeo (opcional)
-    let videoUrl = null, videoPublicId = null;
-    if (video && video.buffer.length > 0) {
+    if (file) {
       try {
-        const resultadoVideo = await uploadVideo(video.buffer, video.mimetype);
-        videoUrl = resultadoVideo.secure_url;
-        videoPublicId = resultadoVideo.public_id;
+        const resultado = await uploadFoto(file.buffer, file.mimetype);
+        fotoUrl = resultado.secure_url;
+        fotoPublicId = resultado.public_id;
       } catch (err) {
-        console.error('Erro upload vídeo:', err.message);
-        // Não bloqueia — vídeo é opcional
+        console.error('Erro upload foto:', err.message);
+        return res.status(500).json({ erro: 'Erro ao enviar foto. Tente novamente.' });
       }
     }
 
@@ -73,7 +72,8 @@ module.exports = async (req, res) => {
         nome_completo.trim(), nick.trim(), data_nascimento,
         telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
         cpfHash, cpfResult.situacao || 'REGULAR', cpfResult.nome || null,
-        fotoUrl, fotoPublicId, videoUrl, videoPublicId
+        fotoUrl, fotoPublicId,
+        video_url || null, video_public_id || null
       ]
     );
 
@@ -83,18 +83,6 @@ module.exports = async (req, res) => {
     return res.status(500).json({ erro: 'Erro interno. Tente novamente.' });
   }
 };
-
-// Upload de vídeo para Cloudinary
-async function uploadVideo(buffer, mimetype) {
-  const cloudinary = require('cloudinary').v2;
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: 'mulheresnocs/videos', resource_type: 'video' },
-      (error, result) => { if (error) reject(error); else resolve(result); }
-    );
-    stream.end(buffer);
-  });
-}
 
 function parseMultipart(req) {
   return new Promise((resolve, reject) => {
@@ -106,7 +94,7 @@ function parseMultipart(req) {
       const boundary = contentType.split('boundary=')[1]?.trim();
       if (!boundary) return reject(new Error('Boundary não encontrado'));
       const fields = {};
-      const files = {};
+      let file = null;
       const boundaryBuf = Buffer.from('--' + boundary);
       const parts = splitBuffer(body, boundaryBuf);
       for (const part of parts) {
@@ -122,17 +110,13 @@ function parseMultipart(req) {
         const mimeMatch = headerBuf.match(/Content-Type:\s*([^\r\n]+)/i);
         if (!nameMatch) continue;
         const fieldName = nameMatch[1];
-        if (filenameMatch) {
-          files[fieldName] = {
-            buffer: dataBuf,
-            filename: filenameMatch[1],
-            mimetype: mimeMatch?.[1]?.trim() || 'application/octet-stream'
-          };
-        } else {
+        if (filenameMatch && fieldName === 'foto') {
+          file = { buffer: dataBuf, filename: filenameMatch[1], mimetype: mimeMatch?.[1]?.trim() || 'image/jpeg' };
+        } else if (!filenameMatch) {
           fields[fieldName] = dataBuf.toString('utf8');
         }
       }
-      resolve({ fields, files });
+      resolve({ fields, file });
     });
     req.on('error', reject);
   });
