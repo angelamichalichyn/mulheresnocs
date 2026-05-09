@@ -7,62 +7,59 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --rose: #C8506A; --rose-light: #F5E6EA; --rose-dark: #8B2D42;
-  --cream: #FBF7F4; --warm: #F0E8E2; --text: #1C1410;
-  --muted: #7A6860; --hint: #B0A09A; --border: #E2D5CF;
-  --surface: #FFFFFF; --radius: 12px;
-}
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--text); min-height: 100vh; }
-.hero { background: var(--rose-dark); padding: 3.5rem 1.5rem 2.5rem; text-align: center; position: relative; overflow: hidden; }
-.hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, #D4607A44, transparent 60%), radial-gradient(ellipse at 80% 20%, #F0A0B033, transparent 55%); }
-.hero-inner { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; }
-.hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(2rem,5vw,3rem); color: #fff; line-height: 1.15; margin-bottom: .75rem; }
-.hero h1 em { font-style: italic; color: #F7C5CF; }
-.hero p { color: #F0D8DC; font-size: 15px; line-height: 1.7; font-weight: 300; }
-.hero-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; font-size: 12px; padding: 5px 14px; border-radius: 20px; margin-bottom: 1.25rem; letter-spacing: .04em; }
-.form-wrap { max-width: 560px; margin: -1rem auto 3rem; padding: 0 1rem; }
-.form-card { background: var(--surface); border-radius: 20px; padding: 2rem 1.75rem; box-shadow: 0 4px 32px rgba(140,50,60,.08); }
-.step-bar { display: flex; gap: 6px; margin-bottom: 2rem; }
-.step-dot { height: 4px; flex: 1; border-radius: 4px; background: var(--warm); transition: background .3s; }
-.step-dot.active { background: var(--rose); }
-.step-dot.done { background: var(--rose-dark); }
-.section-title { font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 500; color: var(--rose-dark); margin-bottom: 1.25rem; padding-bottom: .5rem; border-bottom: 1px solid var(--border); }
-.field { margin-bottom: 1.1rem; }
-.field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 5px; letter-spacing: .03em; text-transform: uppercase; }
-.opt { font-weight: 400; color: var(--hint); text-transform: none; letter-spacing: 0; margin-left: 4px; }
-.field input, .field select { width: 100%; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; border: 1.5px solid var(--border); border-radius: var(--radius); background: var(--cream); color: var(--text); transition: border-color .2s, box-shadow .2s; -webkit-appearance: none; }
-.field input:focus, .field select:focus { outline: none; border-color: var(--rose); box-shadow: 0 0 0 3px rgba(200,80,106,.1); background: #fff; }
-.err { font-size: 12px; color: #C0392B; margin-top: 4px; display: none; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.cpf-status { display: none; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; padding: 5px 10px; border-radius: 8px; }
-.cpf-status.ok { background: #E1F5EE; color: #0F6E56; display: flex; }
-.cpf-status.fail { background: #FCEBEB; color: #A32D2D; display: flex; }
-.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.5rem 1rem; text-align: center; cursor: pointer; background: var(--cream); transition: border-color .2s, background .2s; }
-.upload-zone:hover { border-color: var(--rose); background: var(--rose-light); }
-.upload-zone.has-file { border-color: #1D9E75; border-style: solid; background: #E1F5EE; }
-.upload-icon { font-size: 28px; margin-bottom: 8px; }
-.upload-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
-.upload-sub { font-size: 12px; color: var(--muted); line-height: 1.5; }
-input[type=file] { display: none; }
-.preview-img { display: none; width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 12px; }
-.preview-vid { display: none; width: 100%; max-height: 200px; border-radius: 8px; margin-top: 12px; }
-.remove-btn { display: none; margin-top: 8px; font-size: 12px; color: #E24B4A; background: none; border: none; cursor: pointer; padding: 0; }
-.info-box { background: #FBF4E8; border-left: 3px solid #BA7517; border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 1.25rem; font-size: 12.5px; color: #633806; line-height: 1.6; }
-.consent-box { background: var(--rose-light); border-radius: var(--radius); padding: 14px 16px; margin: 1.5rem 0; }
-.consent-box label { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--rose-dark); cursor: pointer; line-height: 1.6; }
-.consent-box input[type=checkbox] { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--rose); }
-.submit-btn { width: 100%; padding: 14px; background: var(--rose); color: #fff; border: none; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500; cursor: pointer; transition: background .2s; }
-.submit-btn:hover { background: var(--rose-dark); }
-.submit-btn:disabled { background: var(--hint); cursor: not-allowed; }
-.spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; margin-right: 6px; vertical-align: middle; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.success-screen { display: none; text-align: center; padding: 2.5rem 1rem; }
-.success-screen .check-circle { width: 72px; height: 72px; background: #E1F5EE; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 1.25rem; }
-.success-screen h2 { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--rose-dark); margin-bottom: .75rem; }
-.success-screen p { font-size: 14px; color: var(--muted); line-height: 1.7; }
-@media (max-width: 480px) { .row2 { grid-template-columns: 1fr; } .form-card { padding: 1.5rem 1.25rem; } }
+:root{--rose:#C8506A;--rose-light:#F5E6EA;--rose-dark:#8B2D42;--cream:#FBF7F4;--warm:#F0E8E2;--text:#1C1410;--muted:#7A6860;--hint:#B0A09A;--border:#E2D5CF;--surface:#FFFFFF;--radius:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh}
+.hero{background:var(--rose-dark);padding:3.5rem 1.5rem 2.5rem;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,#D4607A44,transparent 60%),radial-gradient(ellipse at 80% 20%,#F0A0B033,transparent 55%)}
+.hero-inner{position:relative;z-index:1;max-width:560px;margin:0 auto}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3rem);color:#fff;line-height:1.15;margin-bottom:.75rem}
+.hero h1 em{font-style:italic;color:#F7C5CF}
+.hero p{color:#F0D8DC;font-size:15px;line-height:1.7;font-weight:300}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12px;padding:5px 14px;border-radius:20px;margin-bottom:1.25rem;letter-spacing:.04em}
+.form-wrap{max-width:560px;margin:-1rem auto 3rem;padding:0 1rem}
+.form-card{background:var(--surface);border-radius:20px;padding:2rem 1.75rem;box-shadow:0 4px 32px rgba(140,50,60,.08)}
+.step-bar{display:flex;gap:6px;margin-bottom:2rem}
+.step-dot{height:4px;flex:1;border-radius:4px;background:var(--warm);transition:background .3s}
+.step-dot.active{background:var(--rose)}.step-dot.done{background:var(--rose-dark)}
+.section-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:500;color:var(--rose-dark);margin-bottom:1.25rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.field{margin-bottom:1.1rem}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
+.opt{font-weight:400;color:var(--hint);text-transform:none;letter-spacing:0;margin-left:4px}
+.field input,.field select{width:100%;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text);transition:border-color .2s;-webkit-appearance:none}
+.field input:focus,.field select:focus{outline:none;border-color:var(--rose);box-shadow:0 0 0 3px rgba(200,80,106,.1);background:#fff}
+.err{font-size:12px;color:#C0392B;margin-top:4px;display:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cpf-status{display:none;align-items:center;gap:6px;margin-top:6px;font-size:12px;padding:5px 10px;border-radius:8px}
+.cpf-status.ok{background:#E1F5EE;color:#0F6E56;display:flex}
+.cpf-status.fail{background:#FCEBEB;color:#A32D2D;display:flex}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;background:var(--cream);transition:border-color .2s,background .2s}
+.upload-zone:hover{border-color:var(--rose);background:var(--rose-light)}
+.upload-zone.has-file{border-color:#1D9E75;border-style:solid;background:#E1F5EE}
+.upload-zone.loading{border-color:#BA7517;background:#FBF4E8;cursor:default}
+.upload-icon{font-size:28px;margin-bottom:8px}
+.upload-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+.upload-sub{font-size:12px;color:var(--muted);line-height:1.5}
+input[type=file]{display:none}
+.preview-img{display:none;width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-top:12px}
+.preview-vid{display:none;width:100%;max-height:200px;border-radius:8px;margin-top:12px}
+.remove-btn{display:none;margin-top:8px;font-size:12px;color:#E24B4A;background:none;border:none;cursor:pointer;padding:0}
+.info-box{background:#FBF4E8;border-left:3px solid #BA7517;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:1.25rem;font-size:12.5px;color:#633806;line-height:1.6}
+.consent-box{background:var(--rose-light);border-radius:var(--radius);padding:14px 16px;margin:1.5rem 0}
+.consent-box label{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--rose-dark);cursor:pointer;line-height:1.6}
+.consent-box input[type=checkbox]{margin-top:2px;width:16px;height:16px;flex-shrink:0;accent-color:var(--rose)}
+.submit-btn{width:100%;padding:14px;background:var(--rose);color:#fff;border:none;border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s}
+.submit-btn:hover{background:var(--rose-dark)}
+.submit-btn:disabled{background:var(--hint);cursor:not-allowed}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin-right:6px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.success-screen{display:none;text-align:center;padding:2.5rem 1rem}
+.success-screen .check-circle{width:72px;height:72px;background:#E1F5EE;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 1.25rem}
+.success-screen h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--rose-dark);margin-bottom:.75rem}
+.success-screen p{font-size:14px;color:var(--muted);line-height:1.7}
+.progress-bar{height:4px;background:var(--border);border-radius:4px;margin-top:8px;overflow:hidden;display:none}
+.progress-bar .fill{height:100%;background:var(--rose);border-radius:4px;transition:width .3s;width:0%}
+@media(max-width:480px){.row2{grid-template-columns:1fr}.form-card{padding:1.5rem 1.25rem}}
 </style>
 </head>
 <body>
@@ -159,24 +156,25 @@ input[type=file] { display: none; }
         <div class="upload-zone" id="upload-zone-foto" onclick="document.getElementById('foto-input').click()">
           <div class="upload-icon">📸</div>
           <div class="upload-title" id="foto-title">Toque para enviar a foto</div>
-          <div class="upload-sub">Seu rosto + RG, CNH ou passaporte visível<br>JPG ou PNG — máx. 8 MB</div>
+          <div class="upload-sub">Seu rosto + documento visível<br>JPG ou PNG — máx. 8 MB</div>
         </div>
         <input type="file" id="foto-input" accept="image/jpeg,image/png" onchange="previewFoto(this)">
-        <img class="preview-img" id="preview-img" alt="Prévia da foto">
+        <img class="preview-img" id="preview-img" alt="Prévia">
         <button class="remove-btn" id="remove-foto" onclick="removerFoto()">✕ Remover foto</button>
       </div>
 
       <div class="field">
         <label>Vídeo de verificação <span class="opt">(substitui a foto)</span></label>
-        <div style="background:#FBF4E8;border-left:3px solid #BA7517;border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#633806;line-height:1.6">
+        <div class="info-box" style="margin-bottom:10px">
           🎥 Grave um vídeo curto dizendo seu <strong>nome</strong>, seu <strong>nick</strong> e mostrando seu <strong>perfil da Steam</strong> na tela.
         </div>
         <div class="upload-zone" id="upload-zone-video" onclick="document.getElementById('video-input').click()">
           <div class="upload-icon">🎬</div>
           <div class="upload-title" id="video-title">Toque para enviar o vídeo</div>
-          <div class="upload-sub">MP4, MOV — máx. 50 MB</div>
+          <div class="upload-sub">MP4 ou MOV — máx. 100 MB</div>
         </div>
-        <input type="file" id="video-input" accept="video/mp4,video/quicktime,video/*" onchange="previewVideo(this)">
+        <input type="file" id="video-input" accept="video/mp4,video/quicktime,video/*" onchange="selecionarVideo(this)">
+        <div class="progress-bar" id="video-progress"><div class="fill" id="video-progress-fill"></div></div>
         <video class="preview-vid" id="preview-vid" controls></video>
         <button class="remove-btn" id="remove-video" onclick="removerVideo()">✕ Remover vídeo</button>
       </div>
@@ -203,12 +201,14 @@ input[type=file] { display: none; }
 </div>
 
 <script>
-// Idade mínima 16 anos
 const hoje = new Date();
 const max16 = new Date(hoje.getFullYear()-16, hoje.getMonth(), hoje.getDate()).toISOString().split('T')[0];
 document.getElementById('dnasc').max = max16;
 
-// Máscara CPF
+// Estado do vídeo (upload direto ao Cloudinary)
+let videoUploadData = null; // { url, public_id }
+let videoUploading = false;
+
 function maskCPF(el) {
   let v = el.value.replace(/\D/g,'').slice(0,11);
   if (v.length > 9) v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/,'$1.$2.$3-$4');
@@ -218,7 +218,6 @@ function maskCPF(el) {
   document.getElementById('cpf-status').className = 'cpf-status';
 }
 
-// Validação matemática CPF
 function cpfValido(cpf) {
   cpf = cpf.replace(/\D/g,'');
   if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
@@ -232,21 +231,14 @@ function validarCPF() {
   const val = document.getElementById('cpf').value;
   const st = document.getElementById('cpf-status');
   if (!val) return;
-  if (!cpfValido(val)) {
-    st.className='cpf-status fail'; st.textContent='✗ CPF com formato inválido';
-  } else {
-    st.className='cpf-status ok'; st.textContent='✓ CPF válido';
-  }
+  if (!cpfValido(val)) { st.className='cpf-status fail'; st.textContent='✗ CPF com formato inválido'; }
+  else { st.className='cpf-status ok'; st.textContent='✓ CPF válido'; }
 }
 
-// Preview foto
 function previewFoto(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 8*1024*1024) {
-    alert('Arquivo muito grande. Máximo 8 MB.');
-    input.value=''; return;
-  }
+  if (file.size > 8*1024*1024) { alert('Arquivo muito grande. Máximo 8 MB.'); input.value=''; return; }
   const reader = new FileReader();
   reader.onload = e => {
     document.getElementById('preview-img').src = e.target.result;
@@ -268,21 +260,82 @@ function removerFoto() {
   document.getElementById('foto-title').textContent='Toque para enviar a foto';
 }
 
-// Preview vídeo
-function previewVideo(input) {
+async function selecionarVideo(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 50*1024*1024) {
-    alert('Vídeo muito grande. Máximo 50 MB.');
-    input.value=''; return;
-  }
+  if (file.size > 100*1024*1024) { alert('Vídeo muito grande. Máximo 100 MB.'); input.value=''; return; }
+
+  // Mostra preview local
   const url = URL.createObjectURL(file);
   document.getElementById('preview-vid').src = url;
   document.getElementById('preview-vid').style.display = 'block';
-  document.getElementById('remove-video').style.display = 'block';
-  document.getElementById('upload-zone-video').classList.add('has-file');
-  document.getElementById('video-title').textContent = '✓ Vídeo adicionado';
-  hideErr('err-midia');
+
+  // Inicia upload direto ao Cloudinary
+  const zone = document.getElementById('upload-zone-video');
+  const title = document.getElementById('video-title');
+  const progress = document.getElementById('video-progress');
+  const fill = document.getElementById('video-progress-fill');
+
+  zone.classList.add('loading');
+  zone.onclick = null;
+  title.textContent = '⏳ Enviando vídeo...';
+  progress.style.display = 'block';
+  fill.style.width = '5%';
+  videoUploading = true;
+  videoUploadData = null;
+
+  try {
+    // Pega assinatura do backend
+    const signRes = await fetch('/api/upload-sign', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const sign = await signRes.json();
+
+    // Upload direto ao Cloudinary via XMLHttpRequest (para ter progresso)
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('api_key', sign.api_key);
+    fd.append('timestamp', sign.timestamp);
+    fd.append('signature', sign.signature);
+    fd.append('folder', sign.folder);
+
+    await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${sign.cloud_name}/video/upload`);
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) fill.style.width = Math.round((e.loaded/e.total)*100) + '%';
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          videoUploadData = { url: data.secure_url, public_id: data.public_id };
+          resolve();
+        } else {
+          reject(new Error('Erro no upload'));
+        }
+      };
+      xhr.onerror = () => reject(new Error('Erro de rede'));
+      xhr.send(fd);
+    });
+
+    fill.style.width = '100%';
+    setTimeout(() => { progress.style.display = 'none'; }, 500);
+    zone.classList.remove('loading');
+    zone.classList.add('has-file');
+    zone.onclick = () => document.getElementById('video-input').click();
+    title.textContent = '✓ Vídeo enviado!';
+    document.getElementById('remove-video').style.display = 'block';
+    hideErr('err-midia');
+
+  } catch (err) {
+    console.error('Erro upload vídeo:', err);
+    zone.classList.remove('loading');
+    zone.onclick = () => document.getElementById('video-input').click();
+    title.textContent = 'Toque para enviar o vídeo';
+    progress.style.display = 'none';
+    alert('Erro ao enviar o vídeo. Tente novamente.');
+    document.getElementById('video-input').value = '';
+    document.getElementById('preview-vid').style.display = 'none';
+  }
+  videoUploading = false;
 }
 
 function removerVideo() {
@@ -290,14 +343,19 @@ function removerVideo() {
   document.getElementById('preview-vid').style.display='none';
   document.getElementById('preview-vid').src='';
   document.getElementById('remove-video').style.display='none';
-  document.getElementById('upload-zone-video').classList.remove('has-file');
+  const zone = document.getElementById('upload-zone-video');
+  zone.classList.remove('has-file','loading');
+  zone.onclick = () => document.getElementById('video-input').click();
   document.getElementById('video-title').textContent='Toque para enviar o vídeo';
+  videoUploadData = null;
 }
 
 function showErr(id, msg) { const el=document.getElementById(id); if(msg) el.textContent=msg; el.style.display='block'; }
 function hideErr(id) { document.getElementById(id).style.display='none'; }
 
 async function enviar() {
+  if (videoUploading) { alert('Aguarde o vídeo terminar de enviar.'); return; }
+
   let ok = true;
   ['err-nome','err-nick','err-dnasc','err-cpf','err-telefone','err-cidade','err-midia','err-consent'].forEach(hideErr);
 
@@ -308,7 +366,6 @@ async function enviar() {
   const tel = document.getElementById('telefone').value.replace(/\D/g,'');
   const cidade = document.getElementById('cidade').value.trim();
   const foto = document.getElementById('foto-input').files[0];
-  const video = document.getElementById('video-input').files[0];
   const consent = document.getElementById('consent').checked;
 
   if (!nome || nome.split(' ').filter(Boolean).length < 2) { showErr('err-nome'); ok=false; }
@@ -317,14 +374,13 @@ async function enviar() {
   if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
   if (tel.length < 5) { showErr('err-telefone'); ok=false; }
   if (!cidade) { showErr('err-cidade'); ok=false; }
-  if (!foto && !video) { showErr('err-midia'); ok=false; }
+  if (!foto && !videoUploadData) { showErr('err-midia'); ok=false; }
   if (!consent) { showErr('err-consent'); ok=false; }
   if (!ok) return;
 
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span>Enviando...';
-
   document.getElementById('dot1').classList.replace('active','done');
   document.getElementById('dot2').classList.add('active');
 
@@ -338,7 +394,10 @@ async function enviar() {
   fd.append('endereco', document.getElementById('endereco').value.trim());
   fd.append('cidade', cidade);
   if (foto) fd.append('foto', foto);
-  if (video) fd.append('video', video);
+  if (videoUploadData) {
+    fd.append('video_url', videoUploadData.url);
+    fd.append('video_public_id', videoUploadData.public_id);
+  }
 
   try {
     const res = await fetch('/api/cadastro', { method: 'POST', body: fd });
