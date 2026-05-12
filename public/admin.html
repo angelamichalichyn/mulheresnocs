@@ -26,7 +26,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .btn.approve:hover{background:var(--green-light)}
 .btn.reject{border-color:var(--red);color:var(--red)}
 .btn.reject:hover{background:var(--red-light)}
-.btn.excel{border-color:#1D6F42;color:#1D6F42;display:flex;align-items:center;gap:6px}
+.btn.excel{border-color:#1D6F42;color:#1D6F42;display:inline-flex;align-items:center;gap:6px}
 .btn.excel:hover{background:#E8F5EE}
 .error-msg{background:var(--red-light);color:#A32D2D;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:1rem;display:none}
 #app{display:none}
@@ -35,7 +35,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .topbar-logo em{font-style:italic;color:#F7C5CF}
 .topbar-admin{font-size:13px;color:#F0D8DC;display:flex;align-items:center;gap:10px}
 .topbar-admin button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:#fff;padding:5px 12px;border-radius:20px;cursor:pointer;font-size:12px}
-.main{max-width:960px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.main{max-width:1000px;margin:0 auto;padding:1.5rem 1rem 3rem}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
 .stat{background:var(--surface);border-radius:var(--radius);padding:.9rem 1.1rem;border:1px solid var(--border)}
 .stat .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
@@ -50,7 +50,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .card{background:var(--surface);border-radius:16px;border:1px solid var(--border);overflow:hidden}
 table{width:100%;border-collapse:collapse}
 th{text-align:left;padding:10px 14px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-transform:uppercase;letter-spacing:.04em}
-td{padding:13px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
 tr:last-child td{border-bottom:none}
 tr:hover td{background:var(--cream)}
 .name-cell strong{display:block;font-weight:500}
@@ -59,18 +59,19 @@ tr:hover td{background:var(--cream)}
 .badge.pendente{background:var(--amber-light);color:var(--amber)}
 .badge.aprovado{background:var(--green-light);color:var(--green)}
 .badge.rejeitado{background:var(--red-light);color:var(--red)}
-.badge.regular{background:var(--green-light);color:var(--green)}
-.badge.verificar{background:var(--warm);color:var(--muted)}
+.badge.cpf-ok{background:var(--green-light);color:var(--green)}
+.badge.cpf-check{background:var(--warm);color:var(--muted)}
+.badge.doc-ext{background:#EEF2FF;color:#4338CA}
 .empty{text-align:center;padding:3rem;color:var(--hint);font-size:13px}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.open{display:flex}
-.modal{background:var(--surface);border-radius:20px;padding:1.75rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.modal{background:var(--surface);border-radius:20px;padding:1.75rem;width:100%;max-width:540px;max-height:90vh;overflow-y:auto}
 .modal h3{font-family:'Playfair Display',serif;font-size:18px;color:var(--rose-dark);margin-bottom:1.25rem}
 .foto-box{background:var(--cream);border-radius:var(--radius);min-height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:.75rem;overflow:hidden;border:1px solid var(--border)}
 .foto-box img{max-width:100%;max-height:280px;display:block;object-fit:cover}
 .foto-box .hint{color:var(--hint);font-size:13px}
-.video-box{background:var(--cream);border-radius:var(--radius);margin-bottom:1rem;overflow:hidden;border:1px solid var(--border);display:none}
-.video-box video{width:100%;max-height:220px;display:block}
+.video-box{background:#000;border-radius:var(--radius);margin-bottom:.75rem;overflow:hidden;display:none}
+.video-box video{width:100%;max-height:240px;display:block}
 .lgpd-note{font-size:11px;color:var(--hint);text-align:center;margin-bottom:1.25rem}
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.25rem}
 .info-item .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
@@ -84,6 +85,7 @@ tr:hover td{background:var(--cream)}
 .motivo-field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
 .motivo-field textarea{width:100%;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;border:1.5px solid var(--border);border-radius:8px;background:var(--cream);color:var(--text);resize:vertical}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem}
+@media(max-width:600px){th:nth-child(4),td:nth-child(4){display:none}}
 </style>
 </head>
 <body>
@@ -110,21 +112,27 @@ tr:hover td{background:var(--cream)}
       <div class="stat a"><div class="lbl">Aprovadas</div><div class="num" id="stat-a">—</div></div>
       <div class="stat r"><div class="lbl">Rejeitadas</div><div class="num" id="stat-r">—</div></div>
     </div>
-
     <div class="toolbar">
       <div class="tabs">
         <button class="tab active" onclick="mudarAba('pendente',this)">Pendentes <span class="cnt" id="cnt-p">0</span></button>
         <button class="tab" onclick="mudarAba('aprovado',this)">Aprovadas <span class="cnt" id="cnt-a">0</span></button>
         <button class="tab" onclick="mudarAba('rejeitado',this)">Rejeitadas <span class="cnt" id="cnt-r">0</span></button>
       </div>
-      <button class="btn excel" onclick="exportarExcel()">
-        📊 Exportar Excel
-      </button>
+      <button class="btn excel" onclick="exportarExcel()">📊 Exportar Excel</button>
     </div>
-
     <div class="card">
       <table>
-        <thead><tr><th>Nome / Nick</th><th>Nasc.</th><th>Cidade</th><th>Telefone</th><th>CPF</th><th>Recebido</th><th></th></tr></thead>
+        <thead>
+          <tr>
+            <th>Nome / Nick</th>
+            <th>Nasc.</th>
+            <th>Cidade</th>
+            <th>Telefone</th>
+            <th>Documento</th>
+            <th>Recebido</th>
+            <th></th>
+          </tr>
+        </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
@@ -135,9 +143,7 @@ tr:hover td{background:var(--cream)}
   <div class="modal">
     <h3>Revisar cadastro</h3>
     <div class="foto-box" id="foto-box"><span class="hint">Carregando...</span></div>
-    <div class="video-box" id="video-box">
-      <video id="modal-video" controls></video>
-    </div>
+    <div class="video-box" id="video-box"><video id="modal-video" controls></video></div>
     <div class="lgpd-note">A foto/vídeo será deletada permanentemente após sua decisão.</div>
     <div class="info-grid" id="modal-info"></div>
     <div class="motivo-field" id="motivo-field">
@@ -208,17 +214,21 @@ async function carregarCadastros() {
     cache = []; return;
   }
   cache = data.cadastros;
-  tbody.innerHTML = cache.map(c => `
-    <tr>
-      <td class="name-cell"><strong>${esc(c.nome_completo)}</strong><span>@${esc(c.nick)}</span></td>
+  tbody.innerHTML = cache.map(c => {
+    const docBadge = c.doc_tipo === 'CPF'
+      ? `<span class="badge ${c.cpf_situacao === 'REGULAR' ? 'cpf-ok' : 'cpf-check'}">CPF ${c.cpf_situacao === 'REGULAR' ? '✓' : '?'}</span>`
+      : `<span class="badge doc-ext">${esc(c.doc_tipo || 'Doc. ext.')}</span>`;
+    const temVideo = c.tem_video ? ' 🎬' : '';
+    return `<tr>
+      <td class="name-cell"><strong>${esc(c.nome_completo)}</strong><span>@${esc(c.nick)}${temVideo}</span></td>
       <td>${fmtData(c.data_nascimento)}</td>
       <td>${esc(c.cidade || '—')}</td>
       <td>${esc(c.telefone || '—')}</td>
-      <td><span class="badge ${c.cpf_situacao === 'REGULAR' ? 'regular' : 'verificar'}">${c.cpf_situacao === 'REGULAR' ? 'Regular' : 'Verificar'}</span></td>
+      <td>${docBadge}</td>
       <td style="color:var(--muted)">${fmtDataHora(c.criado_em)}</td>
       <td><button class="btn" onclick="abrirModal('${c.id}')">Ver</button></td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 function mudarAba(aba, btn) {
@@ -236,23 +246,25 @@ async function abrirModal(id) {
   document.getElementById('video-box').style.display = 'none';
 
   const fotoBox = document.getElementById('foto-box');
-  fotoBox.innerHTML = '<span class="hint">Carregando foto...</span>';
+  fotoBox.innerHTML = '<span class="hint">Carregando...</span>';
 
-  const fotoData = await req('GET', `/admin/cadastros?id=${id}`);
-  if (fotoData?.url) {
-    fotoBox.innerHTML = `<img src="${fotoData.url}" alt="Selfie com documento">`;
+  const mediaData = await req('GET', `/admin/cadastros?id=${id}`);
+  if (mediaData?.url) {
+    fotoBox.innerHTML = `<img src="${mediaData.url}" alt="Selfie com documento">`;
   } else {
-    fotoBox.innerHTML = '<span class="hint">Foto indisponível</span>';
+    fotoBox.innerHTML = '<span class="hint">Sem foto</span>';
   }
-
-  // Vídeo
-  if (fotoData?.video_url) {
-    document.getElementById('modal-video').src = fotoData.video_url;
+  if (mediaData?.video_url) {
+    document.getElementById('modal-video').src = mediaData.video_url;
     document.getElementById('video-box').style.display = 'block';
   }
 
   const c = cache.find(x => x.id === id);
   if (!c) return;
+
+  const docInfo = c.doc_tipo === 'CPF'
+    ? `CPF — ${c.cpf_situacao === 'REGULAR' ? '✓ Regular' : '⚠ Verificar doc.'}`
+    : `${c.doc_tipo || 'Documento estrangeiro'}`;
 
   document.getElementById('modal-info').innerHTML = `
     <div class="info-item"><div class="lbl">Nome completo</div><div class="val">${esc(c.nome_completo)}</div></div>
@@ -261,7 +273,7 @@ async function abrirModal(id) {
     <div class="info-item"><div class="lbl">Telefone</div><div class="val">${esc(c.telefone || '—')}</div></div>
     <div class="info-item"><div class="lbl">Cidade</div><div class="val">${esc(c.cidade || '—')}</div></div>
     <div class="info-item"><div class="lbl">Endereço</div><div class="val">${esc(c.endereco || '—')}</div></div>
-    <div class="info-item"><div class="lbl">CPF Receita</div><div class="val">${c.cpf_situacao === 'REGULAR' ? '✓ Regular' : '⚠ Verificar doc.'}</div></div>
+    <div class="info-item"><div class="lbl">Documento</div><div class="val">${esc(docInfo)}</div></div>
     <div class="info-item"><div class="lbl">Status</div><div class="val"><span class="badge ${c.status}">${c.status}</span></div></div>
     <div class="nick-edit-box">
       <div class="lbl">Alterar nick</div>
@@ -298,51 +310,32 @@ async function decidir(acao) {
   if (res) { fecharModal(); carregarStats(); carregarCadastros(); }
 }
 
-// =================== EXPORTAR EXCEL ===================
 async function exportarExcel() {
-  // Busca TODOS os cadastros do status atual (sem paginação)
   const data = await req('GET', `/admin/cadastros?status=${abaAtual}&limit=9999`);
   if (!data || !data.cadastros.length) { alert('Nenhum cadastro para exportar.'); return; }
-
-  const titulos = { pendente: 'Pendentes', aprovado: 'Aprovadas', rejeitado: 'Rejeitadas' };
-  const linhas = [
-    ['Nome Completo', 'Nick', 'Data Nasc.', 'Telefone', 'Cidade', 'Endereço', 'CPF Receita', 'Status', 'Recebido em']
-  ];
-
+  const linhas = [['Nome Completo','Nick','Nascimento','Telefone','Cidade','Endereço','Tipo Documento','Doc. Situação','Status','Recebido em']];
   data.cadastros.forEach(c => {
     linhas.push([
-      c.nome_completo || '',
-      c.nick || '',
+      c.nome_completo||'', c.nick||'',
       c.data_nascimento ? new Date(c.data_nascimento).toLocaleDateString('pt-BR') : '',
-      c.telefone || '',
-      c.cidade || '',
-      c.endereco || '',
-      c.cpf_situacao || '',
-      c.status || '',
-      c.criado_em ? new Date(c.criado_em).toLocaleString('pt-BR') : '',
+      c.telefone||'', c.cidade||'', c.endereco||'',
+      c.doc_tipo||'CPF', c.cpf_situacao||'',
+      c.status||'',
+      c.criado_em ? new Date(c.criado_em).toLocaleString('pt-BR') : ''
     ]);
   });
-
-  // Gerar CSV (compatível com Excel)
-  const csv = linhas.map(row =>
-    row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';')
-  ).join('\n');
-
-  const bom = '\uFEFF'; // BOM para Excel reconhecer UTF-8
-  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+  const csv = linhas.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
   const a = document.createElement('a');
-  a.href = url;
+  a.href = URL.createObjectURL(blob);
   a.download = `mulheresnocs_${abaAtual}_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
 }
 
 async function req(method, path, body) {
   try {
     const res = await fetch(`${API}${path}`, {
-      method,
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: body ? JSON.stringify(body) : undefined
     });
     if (res.status === 401) { logout(); return null; }
