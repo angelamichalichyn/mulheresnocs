@@ -1,4 +1,3 @@
-// api/cadastro.js
 const { uploadFoto } = require('./cloudinary');
 const { consultarCPF } = require('./cpf');
 const { getPool } = require('./db');
@@ -11,12 +10,12 @@ module.exports = async (req, res) => {
 
   try {
     const { fields, file } = await parseMultipart(req);
-    const { nome_completo, nick, data_nascimento, cpf, telefone, endereco, cidade, video_url, video_public_id } = fields;
+    const { nome_completo, nick, data_nascimento, doc_tipo, doc_numero,
+            telefone, endereco, cidade, video_url, video_public_id } = fields;
 
-    if (!nome_completo || !nick || !data_nascimento || !cpf || !cidade)
+    if (!nome_completo || !nick || !data_nascimento || !doc_tipo || !doc_numero || !cidade)
       return res.status(400).json({ erro: 'Campos obrigatórios ausentes' });
 
-    // Foto OU vídeo obrigatório
     if (!file && !video_url)
       return res.status(400).json({ erro: 'Envie a foto com documento ou o vídeo de verificação' });
 
@@ -28,7 +27,6 @@ module.exports = async (req, res) => {
     if (idade < 16) return res.status(400).json({ erro: 'É necessário ter 16 anos ou mais' });
 
     const pool = getPool();
-    const cpfLimpo = cpf.replace(/\D/g, '');
 
     // Nick único — só bloqueia se aprovado
     const nickCheck = await pool.query(
@@ -36,20 +34,30 @@ module.exports = async (req, res) => {
     );
     if (nickCheck.rows.length > 0) return res.status(409).json({ erro: 'Este nick já está em uso' });
 
+    // Hash do documento para verificar duplicata
+    const docLimpo = doc_numero.replace(/\s/g, '').toUpperCase();
+    const docHash = await bcrypt.hash(docLimpo, 12);
+
     // CPF duplicado — só bloqueia se já aprovado
-    const aprovados = await pool.query("SELECT cpf_hash FROM cadastros WHERE status = 'aprovado'");
-    for (const row of aprovados.rows) {
-      const igual = await bcrypt.compare(cpfLimpo, row.cpf_hash);
-      if (igual) return res.status(409).json({ erro: 'Este CPF já possui um cadastro aprovado na comunidade.' });
+    if (doc_tipo === 'CPF') {
+      const cpfLimpo = doc_numero.replace(/\D/g, '');
+      const aprovados = await pool.query("SELECT cpf_hash FROM cadastros WHERE status = 'aprovado' AND doc_tipo = 'CPF'");
+      for (const row of aprovados.rows) {
+        const igual = await bcrypt.compare(cpfLimpo, row.cpf_hash);
+        if (igual) return res.status(409).json({ erro: 'Este CPF já possui um cadastro aprovado na comunidade.' });
+      }
     }
 
-    // Validar CPF
-    const cpfResult = await consultarCPF(cpf);
-    if (!cpfResult.valido) return res.status(400).json({ erro: cpfResult.erro || 'CPF inválido' });
+    // Validar CPF na Receita (só se for CPF)
+    let cpfSituacao = 'NAO_APLICAVEL', cpfNome = null;
+    if (doc_tipo === 'CPF') {
+      const cpfResult = await consultarCPF(doc_numero);
+      if (!cpfResult.valido) return res.status(400).json({ erro: cpfResult.erro || 'CPF inválido' });
+      cpfSituacao = cpfResult.situacao || 'REGULAR';
+      cpfNome = cpfResult.nome || null;
+    }
 
-    const cpfHash = await bcrypt.hash(cpfLimpo, 12);
-
-    // Upload foto (se enviada)
+    // Upload foto
     let fotoUrl = null, fotoPublicId = null;
     if (file) {
       try {
@@ -65,15 +73,14 @@ module.exports = async (req, res) => {
     await pool.query(
       `INSERT INTO cadastros
         (nome_completo, nick, data_nascimento, telefone, endereco, cidade,
-         cpf_hash, cpf_situacao, cpf_nome_receita,
+         doc_tipo, cpf_hash, cpf_situacao, cpf_nome_receita,
          foto_url, foto_public_id, video_url, video_public_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
       [
         nome_completo.trim(), nick.trim(), data_nascimento,
         telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
-        cpfHash, cpfResult.situacao || 'REGULAR', cpfResult.nome || null,
-        fotoUrl, fotoPublicId,
-        video_url || null, video_public_id || null
+        doc_tipo, docHash, cpfSituacao, cpfNome,
+        fotoUrl, fotoPublicId, video_url || null, video_public_id || null
       ]
     );
 
