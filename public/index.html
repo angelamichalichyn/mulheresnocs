@@ -33,6 +33,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);
 .cpf-status{display:none;align-items:center;gap:6px;margin-top:6px;font-size:12px;padding:5px 10px;border-radius:8px}
 .cpf-status.ok{background:#E1F5EE;color:#0F6E56;display:flex}
 .cpf-status.fail{background:#FCEBEB;color:#A32D2D;display:flex}
+
+/* Doc type toggle */
+.doc-toggle{display:flex;gap:6px;margin-bottom:12px}
+.doc-tab{flex:1;padding:9px;border:1.5px solid var(--border);border-radius:8px;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);text-align:center;transition:all .15s}
+.doc-tab.active{background:var(--rose-light);border-color:var(--rose);color:var(--rose-dark)}
+
 .upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;background:var(--cream);transition:border-color .2s,background .2s}
 .upload-zone:hover{border-color:var(--rose);background:var(--rose-light)}
 .upload-zone.has-file{border-color:#1D9E75;border-style:solid;background:#E1F5EE}
@@ -102,11 +108,41 @@ input[type=file]{display:none}
         </div>
       </div>
 
+      <!-- DOCUMENTO -->
       <div class="field">
-        <label>CPF</label>
-        <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)" onblur="validarCPF()">
-        <div class="cpf-status" id="cpf-status"></div>
-        <div class="err" id="err-cpf">CPF inválido.</div>
+        <label>Documento de identidade</label>
+        <div class="doc-toggle">
+          <button type="button" class="doc-tab active" id="tab-cpf" onclick="trocarDoc('cpf')">🇧🇷 CPF</button>
+          <button type="button" class="doc-tab" id="tab-estrangeiro" onclick="trocarDoc('estrangeiro')">🌍 Documento estrangeiro</button>
+        </div>
+
+        <!-- CPF -->
+        <div id="campo-cpf">
+          <input type="text" id="cpf" placeholder="000.000.000-00" maxlength="14" oninput="maskCPF(this)" onblur="validarCPF()">
+          <div class="cpf-status" id="cpf-status"></div>
+          <div class="err" id="err-cpf">CPF inválido.</div>
+        </div>
+
+        <!-- Documento estrangeiro -->
+        <div id="campo-estrangeiro" style="display:none">
+          <div class="row2" style="margin-bottom:8px">
+            <div>
+              <select id="tipo-doc" style="width:100%;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:var(--radius);background:var(--cream);color:var(--text)">
+                <option value="DNI">DNI</option>
+                <option value="Pasaporte">Pasaporte / Passport</option>
+                <option value="RUT">RUT (Chile)</option>
+                <option value="CUIT">CUIT (Argentina)</option>
+                <option value="Cedula">Cédula</option>
+                <option value="NIF">NIF (Portugal/Espanha)</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+            <div>
+              <input type="text" id="num-doc" placeholder="Número do documento" autocomplete="off">
+            </div>
+          </div>
+          <div class="err" id="err-doc-estrangeiro">Insira o número do documento.</div>
+        </div>
       </div>
 
       <div class="field">
@@ -148,7 +184,7 @@ input[type=file]{display:none}
       <div class="section-title" style="margin-top:1.75rem">Verificação de identidade</div>
 
       <div class="info-box">
-        Envie uma <strong>selfie segurando seu documento</strong> (RG, CNH ou passaporte) visível ao lado do rosto <strong>OU</strong> um vídeo curto. A mídia será analisada por uma administradora e deletada após a decisão.
+        Envie uma <strong>selfie segurando seu documento</strong> visível ao lado do rosto <strong>OU</strong> um vídeo curto. A mídia será analisada por uma administradora e deletada após a decisão.
       </div>
 
       <div class="field">
@@ -205,9 +241,18 @@ const hoje = new Date();
 const max16 = new Date(hoje.getFullYear()-16, hoje.getMonth(), hoje.getDate()).toISOString().split('T')[0];
 document.getElementById('dnasc').max = max16;
 
-// Estado do vídeo (upload direto ao Cloudinary)
-let videoUploadData = null; // { url, public_id }
+let tipoDocAtual = 'cpf';
+let videoUploadData = null;
 let videoUploading = false;
+
+function trocarDoc(tipo) {
+  tipoDocAtual = tipo;
+  document.getElementById('campo-cpf').style.display = tipo === 'cpf' ? 'block' : 'none';
+  document.getElementById('campo-estrangeiro').style.display = tipo === 'estrangeiro' ? 'block' : 'none';
+  document.getElementById('tab-cpf').classList.toggle('active', tipo === 'cpf');
+  document.getElementById('tab-estrangeiro').classList.toggle('active', tipo === 'estrangeiro');
+  hideErr('err-cpf'); hideErr('err-doc-estrangeiro');
+}
 
 function maskCPF(el) {
   let v = el.value.replace(/\D/g,'').slice(0,11);
@@ -264,69 +309,48 @@ async function selecionarVideo(input) {
   const file = input.files[0];
   if (!file) return;
   if (file.size > 100*1024*1024) { alert('Vídeo muito grande. Máximo 100 MB.'); input.value=''; return; }
-
-  // Mostra preview local
   const url = URL.createObjectURL(file);
   document.getElementById('preview-vid').src = url;
   document.getElementById('preview-vid').style.display = 'block';
-
-  // Inicia upload direto ao Cloudinary
   const zone = document.getElementById('upload-zone-video');
   const title = document.getElementById('video-title');
   const progress = document.getElementById('video-progress');
   const fill = document.getElementById('video-progress-fill');
-
-  zone.classList.add('loading');
-  zone.onclick = null;
+  zone.classList.add('loading'); zone.onclick = null;
   title.textContent = '⏳ Enviando vídeo...';
-  progress.style.display = 'block';
-  fill.style.width = '5%';
-  videoUploading = true;
-  videoUploadData = null;
-
+  progress.style.display = 'block'; fill.style.width = '5%';
+  videoUploading = true; videoUploadData = null;
   try {
-    // Pega assinatura do backend
     const signRes = await fetch('/api/upload-sign', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
     const sign = await signRes.json();
-
-    // Upload direto ao Cloudinary via XMLHttpRequest (para ter progresso)
     const fd = new FormData();
     fd.append('file', file);
     fd.append('api_key', sign.api_key);
     fd.append('timestamp', sign.timestamp);
     fd.append('signature', sign.signature);
     fd.append('folder', sign.folder);
-
     await new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `https://api.cloudinary.com/v1_1/${sign.cloud_name}/video/upload`);
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) fill.style.width = Math.round((e.loaded/e.total)*100) + '%';
-      };
+      xhr.upload.onprogress = e => { if (e.lengthComputable) fill.style.width = Math.round((e.loaded/e.total)*100)+'%'; };
       xhr.onload = () => {
         if (xhr.status === 200) {
           const data = JSON.parse(xhr.responseText);
           videoUploadData = { url: data.secure_url, public_id: data.public_id };
           resolve();
-        } else {
-          reject(new Error('Erro no upload'));
-        }
+        } else reject(new Error('Erro no upload'));
       };
       xhr.onerror = () => reject(new Error('Erro de rede'));
       xhr.send(fd);
     });
-
     fill.style.width = '100%';
     setTimeout(() => { progress.style.display = 'none'; }, 500);
-    zone.classList.remove('loading');
-    zone.classList.add('has-file');
+    zone.classList.remove('loading'); zone.classList.add('has-file');
     zone.onclick = () => document.getElementById('video-input').click();
     title.textContent = '✓ Vídeo enviado!';
     document.getElementById('remove-video').style.display = 'block';
     hideErr('err-midia');
-
   } catch (err) {
-    console.error('Erro upload vídeo:', err);
     zone.classList.remove('loading');
     zone.onclick = () => document.getElementById('video-input').click();
     title.textContent = 'Toque para enviar o vídeo';
@@ -355,14 +379,12 @@ function hideErr(id) { document.getElementById(id).style.display='none'; }
 
 async function enviar() {
   if (videoUploading) { alert('Aguarde o vídeo terminar de enviar.'); return; }
-
   let ok = true;
-  ['err-nome','err-nick','err-dnasc','err-cpf','err-telefone','err-cidade','err-midia','err-consent'].forEach(hideErr);
+  ['err-nome','err-nick','err-dnasc','err-cpf','err-doc-estrangeiro','err-telefone','err-cidade','err-midia','err-consent'].forEach(hideErr);
 
   const nome = document.getElementById('nome').value.trim();
   const nick = document.getElementById('nick').value.trim();
   const dnasc = document.getElementById('dnasc').value;
-  const cpf = document.getElementById('cpf').value;
   const tel = document.getElementById('telefone').value.replace(/\D/g,'');
   const cidade = document.getElementById('cidade').value.trim();
   const foto = document.getElementById('foto-input').files[0];
@@ -371,7 +393,18 @@ async function enviar() {
   if (!nome || nome.split(' ').filter(Boolean).length < 2) { showErr('err-nome'); ok=false; }
   if (nick.length < 3) { showErr('err-nick'); ok=false; }
   if (!dnasc || dnasc > max16) { showErr('err-dnasc'); ok=false; }
-  if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
+
+  let docTipo = '', docNumero = '';
+  if (tipoDocAtual === 'cpf') {
+    const cpf = document.getElementById('cpf').value;
+    if (!cpfValido(cpf)) { showErr('err-cpf'); ok=false; }
+    docTipo = 'CPF'; docNumero = cpf;
+  } else {
+    docTipo = document.getElementById('tipo-doc').value;
+    docNumero = document.getElementById('num-doc').value.trim();
+    if (!docNumero) { showErr('err-doc-estrangeiro'); ok=false; }
+  }
+
   if (tel.length < 5) { showErr('err-telefone'); ok=false; }
   if (!cidade) { showErr('err-cidade'); ok=false; }
   if (!foto && !videoUploadData) { showErr('err-midia'); ok=false; }
@@ -389,7 +422,8 @@ async function enviar() {
   fd.append('nome_completo', nome);
   fd.append('nick', nick);
   fd.append('data_nascimento', dnasc);
-  fd.append('cpf', cpf);
+  fd.append('doc_tipo', docTipo);
+  fd.append('doc_numero', docNumero);
   fd.append('telefone', pais + ' ' + document.getElementById('telefone').value.trim());
   fd.append('endereco', document.getElementById('endereco').value.trim());
   fd.append('cidade', cidade);
@@ -403,8 +437,7 @@ async function enviar() {
     const res = await fetch('/api/cadastro', { method: 'POST', body: fd });
     const data = await res.json();
     if (!res.ok) {
-      btn.disabled = false;
-      btn.textContent = 'Enviar cadastro';
+      btn.disabled = false; btn.textContent = 'Enviar cadastro';
       showErr('err-nome', data.erro || 'Erro ao enviar. Tente novamente.');
       return;
     }
@@ -413,8 +446,7 @@ async function enviar() {
     document.getElementById('form-body').style.display = 'none';
     document.getElementById('success-screen').style.display = 'block';
   } catch {
-    btn.disabled = false;
-    btn.textContent = 'Enviar cadastro';
+    btn.disabled = false; btn.textContent = 'Enviar cadastro';
     alert('Erro de conexão. Verifique sua internet e tente novamente.');
   }
 }
