@@ -29,11 +29,8 @@ module.exports = async (req, res) => {
     const { rows } = await pool.query(
       'SELECT foto_url, video_url FROM cadastros WHERE id = $1', [id]
     );
-    if (!rows[0]) return res.status(404).json({ erro: 'Cadastro não encontrado' });
-    return res.status(200).json({
-      url: rows[0].foto_url || null,
-      video_url: rows[0].video_url || null
-    });
+    if (!rows[0]) return res.status(404).json({ erro: 'Não encontrado' });
+    return res.status(200).json({ url: rows[0].foto_url || null, video_url: rows[0].video_url || null });
   }
 
   // GET lista
@@ -44,7 +41,8 @@ module.exports = async (req, res) => {
     const offset = (p - 1) * l;
     const { rows } = await pool.query(
       `SELECT id, nome_completo, nick, data_nascimento, telefone, endereco, cidade,
-              cpf_situacao, cpf_nome_receita, status, motivo_rejeicao, criado_em
+              doc_tipo, cpf_situacao, cpf_nome_receita, status, motivo_rejeicao, criado_em,
+              CASE WHEN video_url IS NOT NULL THEN true ELSE false END as tem_video
        FROM cadastros WHERE status = $1
        ORDER BY criado_em ASC LIMIT $2 OFFSET $3`,
       [s, l, offset]
@@ -76,21 +74,17 @@ module.exports = async (req, res) => {
        WHERE id=$4 RETURNING foto_public_id, video_public_id`,
       [novoStatus, motivo || null, admin.id, cid]
     );
-    if (!rows[0]) return res.status(404).json({ erro: 'Cadastro não encontrado' });
-
-    // Deletar foto e vídeo (LGPD)
+    if (!rows[0]) return res.status(404).json({ erro: 'Não encontrado' });
     if (rows[0].foto_public_id) await deletarFoto(rows[0].foto_public_id);
     if (rows[0].video_public_id) {
       try {
         const cloudinary = require('cloudinary').v2;
         await cloudinary.uploader.destroy(rows[0].video_public_id, { resource_type: 'video' });
-      } catch (e) { console.error('Erro ao deletar vídeo:', e.message); }
+      } catch(e) { console.error('Erro ao deletar vídeo:', e.message); }
     }
     await pool.query(
-      'UPDATE cadastros SET foto_public_id=NULL, foto_url=NULL, video_public_id=NULL, video_url=NULL WHERE id=$1',
-      [cid]
+      'UPDATE cadastros SET foto_public_id=NULL, foto_url=NULL, video_public_id=NULL, video_url=NULL WHERE id=$1', [cid]
     );
-
     await pool.query(
       'INSERT INTO audit_log (admin_id, acao, cadastro_id, detalhes) VALUES ($1,$2,$3,$4)',
       [admin.id, novoStatus, cid, JSON.stringify({ motivo })]
