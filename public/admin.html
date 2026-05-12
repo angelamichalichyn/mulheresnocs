@@ -275,6 +275,7 @@ async function abrirModal(id) {
     <div class="info-item"><div class="lbl">Endereço</div><div class="val">${esc(c.endereco || '—')}</div></div>
     <div class="info-item"><div class="lbl">Documento</div><div class="val">${esc(docInfo)}</div></div>
     <div class="info-item"><div class="lbl">Status</div><div class="val"><span class="badge ${c.status}">${c.status}</span></div></div>
+    ${c.motivo_rejeicao ? `<div class="info-item" style="grid-column:1/-1"><div class="lbl">Motivo da rejeição</div><div class="val" style="color:var(--red);background:var(--red-light);padding:8px 10px;border-radius:8px;font-weight:400">${esc(c.motivo_rejeicao)}</div></div>` : ''}
     <div class="nick-edit-box">
       <div class="lbl">Alterar nick</div>
       <div class="nick-edit-row">
