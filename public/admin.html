@@ -59,9 +59,6 @@ tr:hover td{background:var(--cream)}
 .badge.pendente{background:var(--amber-light);color:var(--amber)}
 .badge.aprovado{background:var(--green-light);color:var(--green)}
 .badge.rejeitado{background:var(--red-light);color:var(--red)}
-.badge.cpf-ok{background:var(--green-light);color:var(--green)}
-.badge.cpf-check{background:var(--warm);color:var(--muted)}
-.badge.doc-ext{background:#EEF2FF;color:#4338CA}
 .empty{text-align:center;padding:3rem;color:var(--hint);font-size:13px}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:1rem}
 .modal-bg.open{display:flex}
@@ -128,7 +125,6 @@ tr:hover td{background:var(--cream)}
             <th>Nasc.</th>
             <th>Cidade</th>
             <th>Telefone</th>
-            <th>Documento</th>
             <th>Recebido</th>
             <th></th>
           </tr>
@@ -207,24 +203,20 @@ async function carregarStats() {
 
 async function carregarCadastros() {
   const tbody = document.getElementById('tbody');
-  tbody.innerHTML = '<tr><td colspan="7" class="empty">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
   const data = await req('GET', `/admin/cadastros?status=${abaAtual}`);
   if (!data || !data.cadastros.length) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum cadastro aqui.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum cadastro aqui.</td></tr>';
     cache = []; return;
   }
   cache = data.cadastros;
   tbody.innerHTML = cache.map(c => {
-    const docBadge = c.doc_tipo === 'CPF'
-      ? `<span class="badge ${c.cpf_situacao === 'REGULAR' ? 'cpf-ok' : 'cpf-check'}">CPF ${c.cpf_situacao === 'REGULAR' ? '✓' : '?'}</span>`
-      : `<span class="badge doc-ext">${esc(c.doc_tipo || 'Doc. ext.')}</span>`;
     const temVideo = c.tem_video ? ' 🎬' : '';
     return `<tr>
       <td class="name-cell"><strong>${esc(c.nome_completo)}</strong><span>@${esc(c.nick)}${temVideo}</span></td>
       <td>${fmtData(c.data_nascimento)}</td>
       <td>${esc(c.cidade || '—')}</td>
       <td>${esc(c.telefone || '—')}</td>
-      <td>${docBadge}</td>
       <td style="color:var(--muted)">${fmtDataHora(c.criado_em)}</td>
       <td><button class="btn" onclick="abrirModal('${c.id}')">Ver</button></td>
     </tr>`;
@@ -262,10 +254,6 @@ async function abrirModal(id) {
   const c = cache.find(x => x.id === id);
   if (!c) return;
 
-  const docInfo = c.doc_tipo === 'CPF'
-    ? `CPF — ${c.cpf_situacao === 'REGULAR' ? '✓ Regular' : '⚠ Verificar doc.'}`
-    : `${c.doc_tipo || 'Documento estrangeiro'}`;
-
   document.getElementById('modal-info').innerHTML = `
     <div class="info-item"><div class="lbl">Nome completo</div><div class="val">${esc(c.nome_completo)}</div></div>
     <div class="info-item"><div class="lbl">Nick atual</div><div class="val">@${esc(c.nick)}</div></div>
@@ -273,7 +261,7 @@ async function abrirModal(id) {
     <div class="info-item"><div class="lbl">Telefone</div><div class="val">${esc(c.telefone || '—')}</div></div>
     <div class="info-item"><div class="lbl">Cidade</div><div class="val">${esc(c.cidade || '—')}</div></div>
     <div class="info-item"><div class="lbl">Endereço</div><div class="val">${esc(c.endereco || '—')}</div></div>
-    <div class="info-item"><div class="lbl">Documento</div><div class="val">${esc(docInfo)}</div></div>
+
     <div class="info-item"><div class="lbl">Status</div><div class="val"><span class="badge ${c.status}">${c.status}</span></div></div>
     ${c.motivo_rejeicao ? `<div class="info-item" style="grid-column:1/-1"><div class="lbl">Motivo da rejeição</div><div class="val" style="color:var(--red);background:var(--red-light);padding:8px 10px;border-radius:8px;font-weight:400">${esc(c.motivo_rejeicao)}</div></div>` : ''}
     <div class="nick-edit-box">
@@ -314,13 +302,12 @@ async function decidir(acao) {
 async function exportarExcel() {
   const data = await req('GET', `/admin/cadastros?status=${abaAtual}&limit=9999`);
   if (!data || !data.cadastros.length) { alert('Nenhum cadastro para exportar.'); return; }
-  const linhas = [['Nome Completo','Nick','Nascimento','Telefone','Cidade','Endereço','Tipo Documento','Doc. Situação','Status','Recebido em']];
+  const linhas = [['Nome Completo','Nick','Nascimento','Telefone','Cidade','Endereço','Status','Recebido em']];
   data.cadastros.forEach(c => {
     linhas.push([
       c.nome_completo||'', c.nick||'',
       c.data_nascimento ? new Date(c.data_nascimento).toLocaleDateString('pt-BR') : '',
       c.telefone||'', c.cidade||'', c.endereco||'',
-      c.doc_tipo||'CPF', c.cpf_situacao||'',
       c.status||'',
       c.criado_em ? new Date(c.criado_em).toLocaleString('pt-BR') : ''
     ]);
