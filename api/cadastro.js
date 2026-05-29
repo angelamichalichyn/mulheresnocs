@@ -31,8 +31,6 @@ module.exports = async (req, res) => {
     );
     if (nickCheck.rows.length > 0) return res.status(409).json({ erro: 'Este nick já está em uso' });
 
-
-
     // Upload foto
     let fotoUrl = null, fotoPublicId = null;
     if (file) {
@@ -54,13 +52,14 @@ module.exports = async (req, res) => {
       [
         nome_completo.trim(), nick.trim(), data_nascimento,
         telefone?.trim() || null, endereco?.trim() || null, cidade?.trim() || null,
-        fotoUrl, fotoPublicId, video_url || null, video_public_id || null
+        fotoUrl, fotoPublicId,
+        video_url || null, video_public_id || null
       ]
     );
 
     return res.status(201).json({ mensagem: 'Cadastro recebido! Uma administradora irá revisar em até 48h.' });
   } catch (err) {
-    console.error('Erro geral:', err.message);
+    console.error('Erro geral:', err.message, err.stack);
     return res.status(500).json({ erro: 'Erro interno. Tente novamente.' });
   }
 };
